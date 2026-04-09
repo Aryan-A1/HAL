@@ -70,7 +70,14 @@ const ReportSection = ({ result, imageSrc }: Props) => {
                 <AlertTriangle className="w-5 h-5 text-destructive" />
                 <CardTitle className="text-xl">{result.diseaseName}</CardTitle>
               </div>
-              <Badge variant="secondary" className="w-fit mt-1">Detected</Badge>
+              <div className="flex gap-2 mt-2">
+                <Badge variant="secondary" className="w-fit">Detected</Badge>
+                {result.cropName && result.cropName !== "Unknown" && (
+                  <Badge variant="outline" className="w-fit border-secondary text-secondary">
+                    Crop: {result.cropName}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground leading-relaxed">{result.description}</p>

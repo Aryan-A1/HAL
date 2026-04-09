@@ -13,9 +13,7 @@ export const getAuthToken = () => {
 
 const handleResponse = async (response: Response) => {
   if (response.status === 401) {
-    // Optional: Clear storage and redirect to login
-    localStorage.removeItem('auth-storage');
-    window.location.href = '/login';
+    // Throw instead of forcing a redirect — let the calling component decide
     throw new Error('Unauthorized');
   }
 
@@ -67,6 +65,20 @@ export const apiService = {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+
+  postFormData: async (url: string, formData: FormData) => {
+    const token = getAuthToken();
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        // Important: DO NOT set Content-Type to multipart/form-data here. 
+        // Let fetch set it automatically with the correct boundary when passing FormData.
+      },
+      body: formData,
     });
     return handleResponse(response);
   },

@@ -1,4 +1,4 @@
-from . import auth, crop, scheme, weather
+from . import auth, crop, scheme, weather, disease
 
 try:
     from . import chatbot, irrigation

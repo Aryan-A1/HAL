@@ -38,7 +38,7 @@ def logout(current_user: User = Depends(get_current_user)):
     # Stateless JWT logout: client should discard the token.
     return {"message": "Logged out successfully"}
 
-@router.post("/signup", response_model=UserResponse)
+@router.post("/signup", response_model=Token)
 def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     try:
         # Check if user already exists
@@ -71,7 +71,14 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        return db_user
+        
+        # Log them in automatically by returning a token
+        access_token = create_access_token(subject=db_user.id)
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": db_user
+        }
         
     except HTTPException:
         # Re-raise explicit HTTP exceptions

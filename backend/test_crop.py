@@ -2,6 +2,7 @@ import os
 import sys
 from fastapi.testclient import TestClient
 from datetime import date
+import time
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,20 +14,31 @@ client = TestClient(app)
 def test_crop_flow():
     print("--- Starting Crop Profile Verification ---")
     
-    # 1. Signup a test user first (to get a user in the system)
+    # 1. Signup a test user and get token
+    suffix = int(time.time())
     test_user = {
-        "email": "crop_tester@example.com",
+        "email": f"crop_tester_{suffix}@example.com",
         "password": "testpassword123",
         "full_name": "Crop Tester",
-        "phone_number": "+1112223333",
+        "phone_number": f"+91{suffix % 10000000000:010d}",
         "country": "India",
         "state": "Punjab",
         "city": "Ludhiana"
     }
-    client.post("/api/auth/signup", json=test_user)
+    signup_response = client.post("/api/auth/signup", json=test_user)
+    if signup_response.status_code != 200:
+        print(f"[ERROR] Signup failed: {signup_response.status_code}")
+        print(signup_response.json())
+        return
+
+    token = signup_response.json().get("access_token")
+    if not token:
+        print("[ERROR] Signup response did not include token.")
+        return
+
+    headers = {"Authorization": f"Bearer {token}"}
     
     # 2. Create a crop profile
-    # Note: Using user_id=1 placeholder as set in the router for now
     crop_data = {
         "crop_name": "Wheat",
         "soil_type": "Alluvial",
@@ -35,7 +47,7 @@ def test_crop_flow():
     }
     
     print(f"Creating crop profile for {crop_data['crop_name']}...")
-    response = client.post("/api/crops/", json=crop_data)
+    response = client.post("/api/crops", json=crop_data, headers=headers)
     
     if response.status_code == 200:
         data = response.json()
@@ -49,7 +61,7 @@ def test_crop_flow():
 
     # 3. List crop profiles
     print("\nFetching user crop profiles...")
-    list_response = client.get("/api/crops/")
+    list_response = client.get("/api/crops", headers=headers)
     if list_response.status_code == 200:
         crops = list_response.json()
         print(f"[OK] Found {len(crops)} crop profile(s).")

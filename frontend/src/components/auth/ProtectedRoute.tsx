@@ -7,12 +7,17 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const location = useLocation();
 
+  // Wait for the store to rehydrate from localStorage.
+  // Without this, isAuthenticated is always false on first render,
+  // causing logged-in users to be redirected to login.
+  if (!hasHydrated) {
+    return null; // Or a loading spinner
+  }
+
   if (!isAuthenticated) {
-    // Redirect them to the /login page, but save the current location they were
-    // trying to go to when they were redirected. This allows us to send them
-    // along to that page after they login, which is a nicer user experience.
     sessionStorage.setItem('intendedUrl', location.pathname);
     return <Navigate to="/login" replace />;
   }

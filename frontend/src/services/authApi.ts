@@ -15,7 +15,7 @@ export interface LoginResponse {
 }
 
 export const authApi = {
-  async signup(data: any): Promise<User> {
+  async signup(data: any): Promise<LoginResponse> {
     try {
       const response = await fetch(`${API_BASE}/signup`, {
         method: 'POST',

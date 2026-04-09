@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -40,6 +41,7 @@ export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
 
   const form = useForm<SignupFormValues>({
@@ -70,9 +72,13 @@ export function SignupForm() {
         password: data.password,
       };
 
-      await authApi.signup(payload);
-      toast.success('Account created successfully!');
-      navigate('/login');
+      const result = await authApi.signup(payload);
+      
+      // Auto-login the user
+      login(result.user, result.access_token);
+      
+      toast.success('Account created and logged in!');
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');
     } finally {

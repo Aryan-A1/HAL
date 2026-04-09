@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,6 +7,17 @@ import AnalyzeSection from "@/components/crop-disease/AnalyzeSection";
 import ReportSection from "@/components/crop-disease/ReportSection";
 import HistorySection from "@/components/crop-disease/HistorySection";
 import type { AnalysisResult, HistoryEntry } from "@/types/crop-disease";
+import { diseaseApi } from "@/services/diseaseApi";
+import { apiService } from "@/services/apiService";
+import { useAuthStore } from "@/store/useAuthStore";
+import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+
+export interface CropProfile {
+  id: number;
+  crop_name: string;
+  crop_type: string;
+}
 
 const CropDiseasePage = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -15,6 +26,30 @@ const CropDiseasePage = () => {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  
+  // Mode selection
+  const [mode, setMode] = useState<"quick" | "profile">("quick");
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  
+  // Crop selection
+  const [userCrops, setUserCrops] = useState<CropProfile[]>([]);
+  const [selectedCropId, setSelectedCropId] = useState<number | null>(null);
+  const [loadingCrops, setLoadingCrops] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLoadingCrops(true);
+      apiService.get("/api/crops")
+        .then((data) => {
+          setUserCrops(data);
+          if (data.length > 0) {
+            setSelectedCropId(data[0].id);
+          }
+        })
+        .catch((err) => console.error("Failed to load crops", err))
+        .finally(() => setLoadingCrops(false));
+    }
+  }, [isAuthenticated]);
 
   const handleFile = useCallback((f: File) => {
     const valid = ["image/jpeg", "image/png", "image/webp"];
@@ -43,77 +78,42 @@ const CropDiseasePage = () => {
 
   const handleAnalyze = async () => {
     if (!file) return;
+    if (mode === "profile" && !selectedCropId) {
+      setError("Please select a crop from your profile.");
+      return;
+    }
+
     setAnalyzing(true);
     setError(null);
     setResult(null);
 
-    // Simulated AI analysis
-    await new Promise((r) => setTimeout(r, 2500));
+    try {
+      let analysisResult: AnalysisResult;
+      
+      if (mode === "profile" && selectedCropId) {
+        analysisResult = await diseaseApi.detectDiseaseForCrop(file, selectedCropId);
+      } else {
+        analysisResult = await diseaseApi.detectDisease(file);
+      }
 
-    const mockResults: AnalysisResult[] = [
-      {
-        diseaseName: "Leaf Blight",
-        confidence: 87,
-        description: "A fungal infection causing brown spots and leaf withering, commonly seen in humid conditions.",
-        chemical: "Apply Mancozeb 75% WP at 2.5g/L or Copper Oxychloride spray at recommended dosage every 10–14 days.",
-        organic: "Spray neem oil solution (5ml/L) or prepare a garlic-chili extract. Apply Trichoderma-based bio-fungicide to soil.",
-        precautions: "Remove and destroy infected leaves. Ensure proper plant spacing for air circulation. Avoid overhead watering. Rotate crops each season.",
-        stores: "Search for agricultural supply stores near your location for Mancozeb, neem oil, and bio-fungicides.",
-      },
-      {
-        diseaseName: "Powdery Mildew",
-        confidence: 92,
-        description: "White powdery coating on leaves caused by fungal spores, reduces photosynthesis and crop yield.",
-        chemical: "Apply Sulfur-based fungicide (Wettable Sulfur) at 3g/L or Propiconazole 25% EC at 1ml/L water.",
-        organic: "Mix 1 tbsp baking soda + 1 tsp liquid soap in 4L water. Apply milk spray (40% milk, 60% water) weekly.",
-        precautions: "Plant resistant varieties when possible. Ensure adequate sunlight. Prune overcrowded foliage. Water at the base, not overhead.",
-        stores: "Look for Wettable Sulfur and Propiconazole at your nearest Krishi Kendra or agricultural cooperative.",
-      },
-      {
-        diseaseName: "Bacterial Wilt",
-        confidence: 78,
-        description: "Causes sudden wilting without yellowing, often affecting tomato, potato, and eggplant crops.",
-        chemical: "Drench soil with Streptocycline (1g/10L water) or Copper Hydroxide. No direct cure once fully established.",
-        organic: "Apply Pseudomonas fluorescens as soil drench. Incorporate mustard cake into soil. Use bio-compost for soil health.",
-        precautions: "Practice crop rotation with non-host plants. Sterilize tools between plants. Improve soil drainage. Remove affected plants immediately.",
-        stores: "Visit local agri-input shops for Streptocycline, Pseudomonas bio-agents, and copper-based products.",
-      },
-    ];
-
-    const rand = Math.random();
-    if (rand < 0.1) {
-      setError("Analysis failed. Please try again or upload a clearer image.");
+      setResult(analysisResult);
+      
+      // Update history
+      setHistory((prev) => [
+        {
+          id: Date.now().toString(),
+          date: new Date().toLocaleDateString(),
+          imageSrc: preview!,
+          diseaseName: analysisResult.diseaseName || "Healthy",
+          confidence: Math.round(analysisResult.confidence),
+        },
+        ...prev,
+      ]);
+    } catch (err: any) {
+      setError(err.message || "Failed to analyze image. Please try again.");
+    } finally {
       setAnalyzing(false);
-      return;
     }
-
-    if (rand < 0.2) {
-      setResult({
-        diseaseName: "",
-        confidence: 0,
-        description: "",
-        chemical: "",
-        organic: "",
-        precautions: "",
-        stores: "",
-      });
-      setAnalyzing(false);
-      return;
-    }
-
-    const chosen = mockResults[Math.floor(Math.random() * mockResults.length)];
-    setResult(chosen);
-    setHistory((prev) => [
-      {
-        id: Date.now().toString(),
-        date: new Date().toLocaleDateString(),
-        imageSrc: preview!,
-        diseaseName: chosen.diseaseName,
-        confidence: chosen.confidence,
-      },
-      ...prev,
-    ]);
-    setAnalyzing(false);
   };
 
   return (
@@ -141,8 +141,62 @@ const CropDiseasePage = () => {
         </div>
       </section>
 
+      {/* Mode Selection */}
+      <section className="section-padding pb-2">
+        <div className="container mx-auto max-w-2xl">
+          <div className="flex p-1 bg-muted rounded-xl gap-1 w-full max-w-md mx-auto mb-6">
+            <Button 
+              variant={mode === "quick" ? "default" : "ghost"} 
+              className={`flex-1 rounded-lg ${mode === "quick" ? "shadow-sm bg-background text-foreground" : ""}`}
+              onClick={() => setMode("quick")}
+            >
+              Quick Scan
+            </Button>
+            <Button 
+              variant={mode === "profile" ? "default" : "ghost"} 
+              className={`flex-1 rounded-lg ${mode === "profile" ? "shadow-sm bg-background text-foreground" : ""}`}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  setError("You need to be logged in to use Crop Profiles.");
+                  return;
+                }
+                setMode("profile");
+                setError(null);
+              }}
+            >
+              From My Crops
+            </Button>
+          </div>
+          
+          {mode === "profile" && isAuthenticated && (
+            <div className="bg-card border border-border rounded-xl p-4 mb-6 shadow-sm">
+              <label className="block text-sm font-medium mb-2 text-foreground">Select Crop Profile</label>
+              {loadingCrops ? (
+                <div className="text-sm text-muted-foreground">Loading your crops...</div>
+              ) : userCrops.length > 0 ? (
+                <select 
+                  className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                  value={selectedCropId || ""}
+                  onChange={(e) => setSelectedCropId(Number(e.target.value))}
+                >
+                  <option value="" disabled>Select a crop...</option>
+                  {userCrops.map(c => (
+                    <option key={c.id} value={c.id}>{c.crop_name.charAt(0).toUpperCase() + c.crop_name.slice(1)} ({c.crop_type})</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  You don't have any crop profiles yet. Add them in the Irrigation/Dashboard section.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Upload + Analyze */}
-      <section className="section-padding">
+      <section className="section-padding pt-0">
         <div className="container mx-auto max-w-2xl space-y-6">
           <DragDropUpload
             preview={preview}
