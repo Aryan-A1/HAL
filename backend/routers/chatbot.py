@@ -4,11 +4,15 @@ import string
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Body, Request
 from groq import Groq
+from pydantic import BaseModel
 from gtts import gTTS
 
 router = APIRouter(prefix="", tags=["chatbot"])
+
+class ChatJSONRequest(BaseModel):
+    message: str
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
@@ -45,20 +49,57 @@ def _transcribe_audio_groq(client: Groq, filepath: str) -> str:
         return response.text
 
 
+def _is_agriculture_related(text: str) -> bool:
+    """Simple check for agriculture-related keywords."""
+    agri_keywords = {
+        "crop", "farm", "soil", "water", "irrigation", "disease", "pest", "fertilizer", 
+        "seed", "harvest", "season", "weather", "market", "mandi", "scheme", "subsidy",
+        "farmer", "kisan", "planting", "sowing", "pesticide", "organic", "cattle", 
+        "livestock", "tractor", "plow", "yield", "field", "monsoon", "rain"
+    }
+    text_lower = text.lower()
+    return any(keyword in text_lower for keyword in agri_keywords)
+
+
 def _get_answer_groq(client: Groq, question: str) -> str:
+    # First pass: Domain check using keywords (lenient to allow common greetings)
+    # Greetings like "hi", "hello" should still be answered by system prompt logic
+    common_greetings = {"hi", "hello", "namaste", "hey", "help"}
+    text_lower = question.lower().strip()
+    
+    if not _is_agriculture_related(question) and text_lower not in common_greetings:
+        # We still send to LLM but the system prompt will handle it, 
+        # or we can return early for obviously out-of-scope stuff.
+        # Let's let the LLM handle nuanced questions but use a strict system prompt.
+        pass
+
+    system_prompt = (
+        "You are HAL AI, a specialized agriculture assistant for Indian farmers. "
+        "You ONLY answer questions related to agriculture, crops, irrigation, plant diseases, "
+        "soil health, government farming schemes, and general farming practices. "
+        "\n\n"
+        "If the user asks anything outside this domain (e.g., history, math, code, entertainment, "
+        "general advice), politely respond: 'I can only help with agriculture-related queries.' "
+        "\n\n"
+        "Keep responses simple, concise, and use farmer-friendly language without technical jargon. "
+        "Use a friendly yet professional tone. Answer in the same language as the user (English, Hindi, or Hinglish)."
+    )
+
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
-            {"role": "system", "content": "You are a helpful agriculture chatbot for Indian farmers."},
-            {"role": "user", "content": "Give a Brief Of Agriculture Seasons in India"},
-            {
-                "role": "system",
-                "content": "In India, the agricultural season consists of three major seasons: the Kharif (monsoon), the Rabi (winter), and the Zaid (summer)...",
-            },
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": question},
         ],
+        temperature=0.3, # Lower temperature for more focused responses
     )
     return response.choices[0].message.content
+
+
+def _mock_answer(question: str) -> str:
+    if not _is_agriculture_related(question):
+        return "I can only help with agriculture-related queries."
+    return f"I'm HAL AI. I received your question: '{question}'. (Note: Provide GROQ_API_KEY in .env for real AI responses)"
 
 
 def _text_to_audio(text: str, filename: str) -> str:
@@ -88,16 +129,39 @@ def _append_cta(question: str, answer: str) -> str:
 
 @router.post("/chat")
 async def chat(
+    request: Request,
     audio: Optional[UploadFile] = File(default=None),
     text: Optional[str] = Form(default=None),
 ):
+    # Try to get data from JSON first
+    json_data = None
+    form_data = await request.form()
+    
+    if request.headers.get("content-type") == "application/json":
+        try:
+            json_data = await request.json()
+        except:
+            pass
+
+    # Support 'message' or 'text' from either JSON or Form
+    input_text = (
+        text or 
+        form_data.get("message") or 
+        form_data.get("text") or 
+        (json_data.get("message") if json_data else None) or
+        (json_data.get("text") if json_data else None)
+    )
+    
     _ensure_dirs()
 
     api_key = os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY is not configured")
-
-    groq_client = Groq(api_key=api_key)
+    groq_client = None
+    if api_key:
+        groq_client = Groq(api_key=api_key)
+    
+    # Mock fallback for demonstration if API key is missing
+    def _mock_answer(question: str) -> str:
+        return f"I'm HAL AI. I received your question: '{question}'. (Note: Provide GROQ_API_KEY in .env for real AI responses)"
 
     if audio is not None:
         filename = _sanitize_filename(audio.filename or "audio_input.wav")
@@ -109,24 +173,35 @@ async def chat(
         with open(filepath, "wb") as f:
             f.write(content)
 
-        transcription = _transcribe_audio_groq(groq_client, filepath)
-        answer = _get_answer_groq(groq_client, transcription)
+        if groq_client:
+            transcription = _transcribe_audio_groq(groq_client, filepath)
+            answer = _get_answer_groq(groq_client, transcription)
+        else:
+            transcription = "Simulation of audio transcription"
+            answer = _mock_answer(transcription)
+
         answer = _append_cta(transcription, answer)
         voice_filename = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
         _text_to_audio(answer, voice_filename)
 
         return {
-            "text": f"🎤 Transcribed: {transcription}\n\n🤖 Answer: {answer}",
+            "reply": answer,
+            "transcription": transcription,
             "voice": f"/static/audio/{voice_filename}.mp3",
         }
 
-    if text:
-        answer = _get_answer_groq(groq_client, text)
-        answer = _append_cta(text, answer)
+    # input_text is already determined above
+    if input_text:
+        if groq_client:
+            answer = _get_answer_groq(groq_client, input_text)
+        else:
+            answer = _mock_answer(input_text)
+
+        answer = _append_cta(input_text, answer)
         voice_filename = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
         _text_to_audio(answer, voice_filename)
         return {
-            "text": answer,
+            "reply": answer,
             "voice": f"/static/audio/{voice_filename}.mp3",
         }
 

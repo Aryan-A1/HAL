@@ -14,7 +14,7 @@ export const ChatBody = () => {
   }, [messages, isVoiceMode, isTyping]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-[#FAFAFA] flex flex-col sm:max-h-[60vh] max-h-[50vh]">
+    <div className="flex-1 overflow-y-auto p-4 bg-[#FAFAFA] flex flex-col">
       {messages.map((msg) => (
         <ChatMessage key={msg.id} message={msg} />
       ))}
