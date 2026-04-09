@@ -1,4 +1,13 @@
 
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    // Remove trailing slash if present
+    return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+  }
+  return ''; // Default to relative path (handled by Vite proxy in dev)
+};
+
 export const getAuthToken = () => {
   try {
     const storageString = localStorage.getItem('auth-storage');
@@ -33,7 +42,7 @@ const handleResponse = async (response: Response) => {
 export const apiService = {
   get: async (url: string) => {
     const token = getAuthToken();
-    const response = await fetch(url, {
+    const response = await fetch(`${getBaseUrl()}${url}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +54,7 @@ export const apiService = {
 
   post: async (url: string, data: any) => {
     const token = getAuthToken();
-    const response = await fetch(url, {
+    const response = await fetch(`${getBaseUrl()}${url}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,7 +67,7 @@ export const apiService = {
 
   put: async (url: string, data: any) => {
     const token = getAuthToken();
-    const response = await fetch(url, {
+    const response = await fetch(`${getBaseUrl()}${url}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +80,7 @@ export const apiService = {
 
   postFormData: async (url: string, formData: FormData) => {
     const token = getAuthToken();
-    const response = await fetch(url, {
+    const response = await fetch(`${getBaseUrl()}${url}`, {
       method: 'POST',
       headers: {
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -85,7 +94,7 @@ export const apiService = {
 
   delete: async (url: string) => {
     const token = getAuthToken();
-    const response = await fetch(url, {
+    const response = await fetch(`${getBaseUrl()}${url}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
