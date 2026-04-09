@@ -50,11 +50,12 @@ STATIC_DIR = os.path.join(BASE_DIR, "static")
 os.makedirs(os.path.join(STATIC_DIR, "audio"), exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173")
+frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:5173,https://hal-nu.vercel.app")
+origins = [url.strip() for url in frontend_url.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_url],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
