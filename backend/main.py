@@ -8,12 +8,12 @@ from typing import Optional
 import uvicorn
 
 # Routers and DB - these are core and must always be available
-from routers import auth, crop, scheme
-from database import engine, Base
+from .routers import auth, crop, scheme
+from .database import engine, Base
 
 # Try to import optional routers (may not exist in all branches)
 try:
-    from routers import chatbot, irrigation
+    from .routers import chatbot, irrigation
     HAS_EXTRA_ROUTERS = True
 except ImportError:
     HAS_EXTRA_ROUTERS = False
@@ -66,4 +66,4 @@ def get_irrigation_forecast(request: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5001)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

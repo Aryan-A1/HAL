@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
-from backend.database import get_db
-from backend.models.crop import CropProfile
-from backend.routers.auth import get_current_user
-from backend.models.user import User
-from backend.services.irrigation.forecast_engine import forecast_engine
+from ..database import get_db
+from ..models.crop import CropProfile
+from .auth import get_current_user
+from ..models.user import User
+from ..services.irrigation.forecast_engine import forecast_engine
 
 router = APIRouter(prefix="/irrigation", tags=["irrigation"])
 

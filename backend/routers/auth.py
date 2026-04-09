@@ -3,10 +3,10 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 import logging
-from database import get_db
-from models.user import User
-from schemas.user import UserCreate, UserLogin, UserResponse, Token
-from utils.auth import get_password_hash, verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from ..database import get_db
+from ..models.user import User
+from ..schemas.user import UserCreate, UserLogin, UserResponse, Token
+from ..utils.auth import get_password_hash, verify_password, create_access_token, SECRET_KEY, ALGORITHM
 
 logger = logging.getLogger(__name__)
 
