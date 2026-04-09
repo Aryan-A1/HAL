@@ -7,11 +7,16 @@ from pydantic import BaseModel
 from typing import Optional
 import uvicorn
 
-# New Import path for HAL structure
-# Absolute Import for HAL structure
-from backend.services.irrigation.forecast_engine import forecast_engine
-from backend.routers import auth, crop, scheme, chatbot, irrigation
-from backend.database import engine, Base
+# Routers and DB - these are core and must always be available
+from routers import auth, crop, scheme
+from database import engine, Base
+
+# Try to import optional routers (may not exist in all branches)
+try:
+    from routers import chatbot, irrigation
+    HAS_EXTRA_ROUTERS = True
+except ImportError:
+    HAS_EXTRA_ROUTERS = False
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -21,8 +26,9 @@ app = FastAPI(title="HAL API - Intelligent Agriculture")
 app.include_router(auth.router, prefix="/api")
 app.include_router(crop.router, prefix="/api")
 app.include_router(scheme.router, prefix="/api")
-app.include_router(chatbot.router, prefix="/api")
-app.include_router(irrigation.router, prefix="/api")
+if HAS_EXTRA_ROUTERS:
+    app.include_router(chatbot.router, prefix="/api")
+    app.include_router(irrigation.router, prefix="/api")
 
 BASE_DIR = os.path.dirname(__file__)
 STATIC_DIR = os.path.join(BASE_DIR, "static")
@@ -32,7 +38,7 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,6 +46,24 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"status": "online", "message": "HAL Master Backend is ready."}
+
+@app.post("/api/irrigation/forecast")
+def get_irrigation_forecast(request: dict):
+    try:
+        # Lazy import — only fails if called, not on startup
+        from services.irrigation.forecast_engine import forecast_engine
+        calendar = forecast_engine.get_30_day_forecast(request)
+        if not calendar:
+            raise HTTPException(status_code=500, detail="Weather integration failed.")
+        return {
+            "crop": request.get("crop_type"),
+            "module": "irrigation",
+            "calendar": calendar
+        }
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Irrigation ML service not available. Please install ML dependencies.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)

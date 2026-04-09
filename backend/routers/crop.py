@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from backend.database import get_db
-from backend.models.crop import CropProfile
-from backend.schemas.crop import CropCreate, CropResponse
-from backend.routers.auth import get_current_user
-from backend.models.user import User
+from database import get_db
+from models.crop import CropProfile
+from schemas.crop import CropCreate, CropResponse
+from routers.auth import get_current_user
+from models.user import User
 
 router = APIRouter(prefix="/crops", tags=["crops"])
 
