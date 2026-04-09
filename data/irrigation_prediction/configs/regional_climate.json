@@ -1,0 +1,12 @@
+{
+  "North": {
+    "April": {"Temperature_C": 35, "Rainfall_mm": 10, "Humidity": 30, "Sunlight_Hours": 12, "Wind_Speed_kmh": 15},
+    "May": {"Temperature_C": 40, "Rainfall_mm": 15, "Humidity": 25, "Sunlight_Hours": 13, "Wind_Speed_kmh": 18},
+    "June": {"Temperature_C": 38, "Rainfall_mm": 80, "Humidity": 50, "Sunlight_Hours": 11, "Wind_Speed_kmh": 14}
+  },
+  "South": {
+    "April": {"Temperature_C": 32, "Rainfall_mm": 50, "Humidity": 70, "Sunlight_Hours": 10, "Wind_Speed_kmh": 12},
+    "May": {"Temperature_C": 33, "Rainfall_mm": 60, "Humidity": 75, "Sunlight_Hours": 9, "Wind_Speed_kmh": 14},
+    "June": {"Temperature_C": 30, "Rainfall_mm": 150, "Humidity": 85, "Sunlight_Hours": 7, "Wind_Speed_kmh": 16}
+  }
+}

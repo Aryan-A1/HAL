@@ -1,0 +1,47 @@
+{
+  "Clay": {
+    "Soil_pH": 6.5,
+    "Soil_Moisture": 30.0,
+    "Organic_Carbon": 0.8,
+    "Electrical_Conductivity": 1.5,
+    "field_capacity": 45.0,
+    "wilting_point": 20.0,
+    "description": "Heavy soil, holds water well but drains slowly."
+  },
+  "Sandy": {
+    "Soil_pH": 7.2,
+    "Soil_Moisture": 15.0,
+    "Organic_Carbon": 0.3,
+    "Electrical_Conductivity": 0.8,
+    "field_capacity": 20.0,
+    "wilting_point": 5.0,
+    "description": "Light soil, drains very fast. Requires frequent small irrigation."
+  },
+  "Loamy": {
+    "Soil_pH": 6.8,
+    "Soil_Moisture": 25.0,
+    "Organic_Carbon": 0.6,
+    "Electrical_Conductivity": 1.2,
+    "field_capacity": 35.0,
+    "wilting_point": 12.0,
+    "description": "Ideal agricultural soil with balanced drainage and retention."
+  },
+  "Silt": {
+    "Soil_pH": 7.0,
+    "Soil_Moisture": 22.0,
+    "Organic_Carbon": 0.5,
+    "Electrical_Conductivity": 1.0,
+    "field_capacity": 30.0,
+    "wilting_point": 10.0,
+    "description": "Smooth soil with good water retention."
+  },
+  "Peat": {
+    "Soil_pH": 5.5,
+    "Soil_Moisture": 40.0,
+    "Organic_Carbon": 1.2,
+    "Electrical_Conductivity": 2.0,
+    "field_capacity": 55.0,
+    "wilting_point": 25.0,
+    "description": "Highly organic soil, very high water retention."
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "Drip": {
+    "efficiency": 0.95,
+    "description": "High precision, minimal evaporation."
+  },
+  "Sprinkler": {
+    "efficiency": 0.75,
+    "description": "Modern overhead irrigation, some wind-drift loss."
+  },
+  "Surface": {
+    "efficiency": 0.60,
+    "description": "Traditional flooding, high runoff and deep percolation loss."
+  },
+  "Manual": {
+    "efficiency": 0.50,
+    "description": "Bucket or hose irrigation, high waste potential."
+  }
+}

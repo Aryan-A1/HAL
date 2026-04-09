@@ -1,0 +1,72 @@
+{
+  "Wheat": {
+    "kc": {
+      "Initial": 0.3,
+      "Vegetative": 0.7,
+      "Flowering": 1.15,
+      "Grain Filling": 1.1,
+      "Maturity": 0.4
+    },
+    "typical_irrigation_mm": 40
+  },
+  "Rice": {
+    "kc": {
+      "Initial": 1.05,
+      "Vegetative": 1.2,
+      "Flowering": 1.2,
+      "Grain Filling": 1.1,
+      "Maturity": 0.9
+    },
+    "typical_irrigation_mm": 80
+  },
+  "Maize": {
+    "kc": {
+      "Initial": 0.3,
+      "Vegetative": 0.7,
+      "Flowering": 1.2,
+      "Grain Filling": 1.15,
+      "Maturity": 0.6
+    },
+    "typical_irrigation_mm": 50
+  },
+  "Cotton": {
+    "kc": {
+      "Initial": 0.35,
+      "Vegetative": 0.75,
+      "Flowering": 1.15,
+      "Grain Filling": 1.1,
+      "Maturity": 0.5
+    },
+    "typical_irrigation_mm": 60
+  },
+  "Sugarcane": {
+    "kc": {
+      "Initial": 0.4,
+      "Vegetative": 0.85,
+      "Flowering": 1.25,
+      "Grain Filling": 1.1,
+      "Maturity": 0.7
+    },
+    "typical_irrigation_mm": 70
+  },
+  "Potato": {
+    "kc": {
+      "Initial": 0.45,
+      "Vegetative": 0.75,
+      "Flowering": 1.15,
+      "Grain Filling": 1.05,
+      "Maturity": 0.75
+    },
+    "typical_irrigation_mm": 35
+  },
+  "default": {
+    "kc": {
+      "Initial": 0.4,
+      "Vegetative": 0.75,
+      "Flowering": 1.1,
+      "Grain Filling": 1.05,
+      "Maturity": 0.5
+    },
+    "typical_irrigation_mm": 40
+  }
+}
