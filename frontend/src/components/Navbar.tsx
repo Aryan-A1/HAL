@@ -11,7 +11,6 @@ const navItems = [
   { label: "Crop Disease", href: "/crop-disease" },
   { label: "Crop Irrigation", href: "/crop-irrigation" },
   { label: "Catch Up on Crops", href: "/#catch-up-on-crops" },
-  { label: "Dashboard", href: "/#dashboard" },
 ];
 
 const Navbar = () => {
@@ -27,8 +26,8 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-4xl">
-      <div className="bg-primary rounded-full px-6 py-3 flex items-center justify-between shadow-[var(--shadow-nav)]">
+    <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl">
+      <div className="bg-primary rounded-full px-8 py-3 flex items-center justify-between shadow-[var(--shadow-nav)]">
         {/* Logo */}
         <a href="#" className="flex items-center gap-2 text-primary-foreground font-heading font-bold text-xl">
           <Leaf className="w-5 h-5" />
@@ -36,12 +35,12 @@ const Navbar = () => {
         </a>
 
         {/* Desktop nav */}
-        <ul className="hidden md:flex items-center gap-1">
+        <ul className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
             <li key={item.label}>
               <a
                 href={item.href}
-                className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200"
+                className="text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap"
               >
                 {item.label}
               </a>
