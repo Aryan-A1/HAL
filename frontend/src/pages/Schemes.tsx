@@ -38,7 +38,7 @@ const Schemes = () => {
       if (crop) queryParams.append("crop", crop);
       if (state) queryParams.append("state", state);
       
-      const response = await fetch(`http://localhost:8000/schemes/?${queryParams.toString()}`);
+      const response = await fetch(`http://localhost:8000/api/schemes/?${queryParams.toString()}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       
       const data = await response.json();
