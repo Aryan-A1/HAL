@@ -91,7 +91,7 @@ const Navbar = () => {
                 <Link to="/dashboard">
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                     <UserIcon className="w-4 h-4 mr-2" />
-                    Dashboard
+                    Profile
                   </Button>
                 </Link>
                 <Button variant="outline" size="sm" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" onClick={handleLogout}>
@@ -160,7 +160,7 @@ const Navbar = () => {
                     onClick={() => setMobileOpen(false)}
                   >
                     <UserIcon className="w-4 h-4 mr-2" />
-                    Profile & Dashboard
+                    Profile
                   </Link>
                 </li>
                 <li>
