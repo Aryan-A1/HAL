@@ -1,54 +1,196 @@
-import { Send, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
+import { Send, Mic, MicOff, Volume2, Square, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useChatStore } from "../../store/useChatStore";
+import { toast } from "sonner";
 
 export const ChatInput = () => {
   const [text, setText] = useState("");
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
-  const { addMessage, isVoiceMode, setVoiceMode, setIsTyping } = useChatStore();
+  const [isListening, setIsListening] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const { addMessage, isVoiceMode, setVoiceMode, setIsTyping, isTyping } = useChatStore();
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const handleSend = () => {
-    if (!text.trim() && !isVoiceMode) return;
+  const stopResponse = () => {
+    // Abort API call
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
     
-    // If we're simply stopping recording, simulate a voice transcript
-    if (isVoiceMode) {
-      addMessage({
-        role: "user",
-        content: "How much water does my wheat crop need this week?",
-      });
+    // Stop audio playback
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    
+    setIsTyping(false);
+    setIsPlaying(false);
+    toast.info("Response stopped");
+  };
+
+  const toggleListening = async () => {
+    if (isListening) {
+      mediaRecorderRef.current?.stop();
+      setIsListening(false);
       setVoiceMode(false);
-      simulateBotResponse();
-      return;
+    } else {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.error("Browser does not support mic access or non-secure context");
+        toast.error("Microphone access is not supported in this environment. Please ensure you are using HTTPS or localhost.");
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          } 
+        });
+        
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') 
+          ? 'audio/webm' 
+          : MediaRecorder.isTypeSupported('audio/ogg') 
+            ? 'audio/ogg' 
+            : 'audio/wav';
+
+        const mediaRecorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const fileExtension = mimeType.split('/')[1].split(';')[0];
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+          await handleSend(audioBlob, `recording.${fileExtension}`);
+          // Stop all tracks to release the microphone
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        setIsListening(true);
+        setVoiceMode(true);
+        toast.info("Listening...");
+      } catch (error: any) {
+        console.error("Microphone access error:", error);
+        if (error.name === 'NotAllowedError') {
+          toast.error("Microphone permission denied.");
+        } else {
+          toast.error("Could not access microphone: " + error.message);
+        }
+      }
+    }
+  };
+
+  const handleSend = async (audioBlob?: Blob, filename: string = "recording.wav") => {
+    const messageText = text.trim();
+    if (!messageText && !audioBlob) return;
+
+    // Clear any previous audio
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+      setIsPlaying(false);
     }
 
-    // Normal text message Send
-    addMessage({ role: "user", content: text.trim() });
-    setText("");
-    simulateBotResponse();
-  };
-
-  const simulateBotResponse = () => {
+    let userMsgId = "";
+    if (!audioBlob) {
+      addMessage({ role: "user", content: messageText });
+      setText("");
+    } else {
+      userMsgId = addMessage({ role: "user", content: "🎤 Sent a voice message" });
+    }
+    
     setIsTyping(true);
-    setTimeout(() => {
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const formData = new FormData();
+      if (audioBlob) {
+        formData.append("audio", audioBlob, filename);
+      } else {
+        formData.append("message", messageText);
+      }
+
+      const response = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        body: formData,
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) throw new Error("Backend unavailable");
+
+      const data = await response.json();
+      
+      // Update user message with transcription if available
+      if (audioBlob && data.transcription) {
+        useChatStore.getState().updateMessage(userMsgId, `🎤 ${data.transcription}`);
+      }
+
       addMessage({
         role: "bot",
-        content: "Based on the recent weather, your wheat needs about 1-1.5 inches of water this week. Ensure the soil remains moist but not waterlogged.",
+        content: data.reply || "I'm sorry, I couldn't process that.",
       });
+
+      // Handle voice output if speaker is on
+      if (isSpeakerOn && data.voice) {
+        const audio = new Audio(`http://localhost:8000${data.voice}`);
+        audio.playbackRate = 1.15;
+        currentAudioRef.current = audio;
+        setIsPlaying(true);
+        audio.play().catch(e => {
+          console.error("Audio playback error:", e);
+          setIsPlaying(false);
+        });
+        audio.onended = () => {
+          if (currentAudioRef.current === audio) {
+            currentAudioRef.current = null;
+            setIsPlaying(false);
+          }
+        };
+      }
+
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        console.log("Fetch aborted");
+      } else {
+        console.error("Chat error:", error);
+        addMessage({
+          role: "bot",
+          content: "Something went wrong. Please try again.",
+        });
+        toast.error("Failed to connect to HAL AI.");
+      }
+    } finally {
       setIsTyping(false);
-    }, 1500);
+      abortControllerRef.current = null;
+    }
   };
+
+  const showStop = isTyping || isPlaying;
 
   return (
     <div className="p-3 bg-white border-t border-gray-200 rounded-b-xl flex gap-2 items-center">
       <button
         type="button"
-        onClick={() => setVoiceMode(!isVoiceMode)}
+        onClick={toggleListening}
         className={`p-2 rounded-full transition-colors ${
-          isVoiceMode ? "bg-red-100 text-red-500" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-[#1B5E20]"
+          isListening ? "bg-red-500 text-white animate-pulse" : "bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-[#1B5E20]"
         }`}
-        aria-label="Toggle voice input"
+        aria-label={isListening ? "Stop listening" : "Start voice input"}
       >
-        {isVoiceMode ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+        {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
       </button>
 
       <input
@@ -56,9 +198,9 @@ export const ChatInput = () => {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSend()}
-        placeholder={isVoiceMode ? "Listening..." : "Ask about crops, irrigation, disease..."}
-        disabled={isVoiceMode}
-        className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#A5D6A7] focus:border-transparent disabled:opacity-50"
+        disabled={isTyping}
+        placeholder={isListening ? "Listening..." : isTyping ? "HAL AI is thinking..." : "Ask HAL AI..."}
+        className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#A5D6A7] focus:border-transparent disabled:opacity-70"
       />
 
       <button
@@ -67,16 +209,29 @@ export const ChatInput = () => {
         className="p-2 text-gray-500 hover:text-[#1B5E20] transition-colors"
         aria-label="Toggle voice output"
       >
-        {isSpeakerOn ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        {isSpeakerOn ? <Volume2 className="w-5 h-5" /> : <Volume2 className="w-5 h-5 opacity-30" />}
       </button>
 
-      <button
-        onClick={handleSend}
-        disabled={(!text.trim() && !isVoiceMode)}
-        className="p-2 bg-[#1B5E20] text-[#FAFAFA] rounded-full hover:bg-[#1B5E20]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Send className="w-5 h-5" />
-      </button>
+      {showStop ? (
+        <button
+          onClick={stopResponse}
+          className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg animate-in fade-in zoom-in duration-200"
+          aria-label="Stop response"
+        >
+          <Square className="w-5 h-5 fill-current" />
+        </button>
+      ) : (
+        <button
+          onClick={() => handleSend()}
+          disabled={!text.trim() && !isListening}
+          className="p-2 bg-[#1B5E20] text-[#FAFAFA] rounded-full hover:bg-[#1B5E20]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Send className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };
+
+
+
