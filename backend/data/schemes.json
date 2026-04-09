@@ -1,0 +1,110 @@
+[
+  {
+    "id": 1,
+    "name": "PM-KISAN",
+    "description": "Income support scheme for farmers",
+    "benefit": "₹6000 per year in 3 installments",
+    "crop": "all",
+    "state": "all",
+    "source": "https://pmkisan.gov.in"
+  },
+  {
+    "id": 2,
+    "name": "PMFBY",
+    "description": "Crop insurance scheme for farmers",
+    "benefit": "Insurance coverage for crop loss due to disasters, pests, diseases",
+    "crop": "all",
+    "state": "all",
+    "source": "https://pmfby.gov.in"
+  },
+  {
+    "id": 3,
+    "name": "Soil Health Card Scheme",
+    "description": "Provides soil nutrient status and recommendations",
+    "benefit": "Improves soil fertility and crop productivity",
+    "crop": "all",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 4,
+    "name": "PM Krishi Sinchai Yojana",
+    "description": "Irrigation scheme for farmers",
+    "benefit": "Ensures water availability and improves water efficiency",
+    "crop": "all",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 5,
+    "name": "e-NAM",
+    "description": "Online trading platform for agricultural produce",
+    "benefit": "Better price discovery and transparent trading",
+    "crop": "all",
+    "state": "all",
+    "source": "https://enam.gov.in"
+  },
+  {
+    "id": 6,
+    "name": "Kisan Credit Card (KCC)",
+    "description": "Provides credit support to farmers",
+    "benefit": "Low-interest loans for agriculture needs",
+    "crop": "all",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 7,
+    "name": "PM Kisan Maandhan Yojana",
+    "description": "Pension scheme for farmers",
+    "benefit": "₹3000 monthly pension after age 60",
+    "crop": "all",
+    "state": "all",
+    "source": "https://maandhan.in"
+  },
+  {
+    "id": 8,
+    "name": "Paramparagat Krishi Vikas Yojana (PKVY)",
+    "description": "Promotes organic farming",
+    "benefit": "Financial assistance for organic farming",
+    "crop": "all",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 9,
+    "name": "National Food Security Mission (NFSM)",
+    "description": "Increase production of key crops",
+    "benefit": "Improves productivity of rice, wheat, pulses",
+    "crop": "wheat",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 10,
+    "name": "Rashtriya Krishi Vikas Yojana (RKVY)",
+    "description": "Supports agricultural development projects",
+    "benefit": "Funding for agriculture infrastructure and innovation",
+    "crop": "all",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 11,
+    "name": "National Bamboo Mission",
+    "description": "Promotes bamboo cultivation",
+    "benefit": "Support for bamboo farming and marketing",
+    "crop": "bamboo",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  },
+  {
+    "id": 12,
+    "name": "Agricultural Infrastructure Fund",
+    "description": "Supports agri infrastructure development",
+    "benefit": "Loans for storage, cold chains, processing units",
+    "crop": "all",
+    "state": "all",
+    "source": "https://agricoop.gov.in"
+  }
+]
