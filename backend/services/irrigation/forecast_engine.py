@@ -7,7 +7,6 @@ from backend.services.irrigation.ml_service import get_ml_service
 
 class ForecastEngine:
     def __init__(self):
-        # Prefer env override, otherwise resolve repo root relative to this file.
         base_dir = os.getenv("HAL_BASE_DIR")
         if base_dir:
             base_path = Path(base_dir)
@@ -35,10 +34,20 @@ class ForecastEngine:
         
         field_capacity = float(soil_defaults.get("field_capacity", 45.0))
         wilting_point = float(soil_defaults.get("wilting_point", 15.0))
+        current_date = datetime.now()
+        
+        # --- SMART STARTING MOISTURE (Watered Awareness) ---
         current_moisture = float(soil_defaults.get("Soil_Moisture", 25.0))
+        if farmer_input.get("last_irrigation_date"):
+            last_date = farmer_input["last_irrigation_date"]
+            if isinstance(last_date, str):
+                last_date = datetime.fromisoformat(last_date.replace("Z", "+00:00"))
+            
+            # If watered today or in last 24h, start at FULL (FC)
+            if (current_date.replace(tzinfo=None) - last_date.replace(tzinfo=None)).total_seconds() < 86400:
+                current_moisture = field_capacity
         
         sowing_date = datetime.strptime(farmer_input["sowing_date"], "%Y-%m-%d")
-        current_date = datetime.now()
         last_irrigation_applied = 0.0 
         calendar = []
         
@@ -50,6 +59,7 @@ class ForecastEngine:
         for day_idx in range(30):
             day_date = current_date + timedelta(days=day_idx)
             
+            # 1. Weather Context
             if day_idx < len(weather_forecast):
                 w = weather_forecast[day_idx]
             else:
@@ -64,16 +74,13 @@ class ForecastEngine:
                     "humidity": month_data.get("Humidity", 50)
                 }
             
+            # 2. Daily Physics (Evapotranspiration)
             das = (day_date - sowing_date).days
             growth_stage = self._get_growth_stage(farmer_input["crop_type"], das)
             kc = kc_data["kc"].get(growth_stage, 0.7)
-            
-            # Simulation
-            current_moisture += w["rainfall"] * 0.6 
-            evap_loss = (w["temp_max"] * 0.08 + w["sunlight_hours"] * 0.04) * kc
-            current_moisture = max(0, current_moisture - evap_loss)
-            current_moisture = min(field_capacity, current_moisture)
+            etc = (w["temp_max"] * 0.08 + w["sunlight_hours"] * 0.04) * kc
 
+            # 3. AI Features Setup
             features = {
                 "Soil_Type": farmer_input["soil_type"],
                 "Soil_pH": soil_defaults.get("Soil_pH", 7.0),
@@ -96,42 +103,60 @@ class ForecastEngine:
                 "Region": farmer_input["region"]
             }
             
+            # 4. Expert Recommendation Layer
             prediction = self.ml_service.predict(features)
             
-            # Upscale amount for actual pumping recommendation (Net -> Gross)
-            if prediction["irrigate"] and prediction["amount_mm"] > 0:
-                # We need to apply more to account for efficiency loss
-                prediction["gross_amount_mm"] = round(prediction["amount_mm"] / efficiency, 1)
-            else:
-                prediction["gross_amount_mm"] = 0.0
+            # --- EXPERT THRESHOLD (MAD = 0.50) ---
+            expert_threshold = wilting_point + (0.45 * (field_capacity - wilting_point))
+            
+            if not prediction["irrigate"] and current_moisture < expert_threshold:
+                prediction["irrigate"] = True
+                prediction["amount_mm"] = 30.0 
+                prediction["reason"] = self._generate_reason(w, current_moisture, wilting_point, growth_stage, farmer_input["crop_type"])
 
-            # Rain-Safe
+            # --- SAME-DAY HARD LOCK ---
+            was_watered_today = False
+            if farmer_input.get("last_irrigation_date"):
+                last_date = farmer_input["last_irrigation_date"]
+                if isinstance(last_date, str):
+                    last_date = datetime.fromisoformat(last_date.replace("Z", "+00:00"))
+                if last_date.date() == current_date.date():
+                    was_watered_today = True
+
+            if day_idx == 0 and was_watered_today:
+                prediction["irrigate"] = False
+                prediction["reason"] = f"Soil moisture is optimal ({round(current_moisture,1)}%). Irrigation for today is already recorded."
+
+            # 5. Rain-Safe Logic
             rain_safe_skip = False
             if day_idx < len(weather_forecast) - 2:
                 n1, n2 = weather_forecast[day_idx+1], weather_forecast[day_idx+2]
                 if (n1["rain_prob"] > 60 and n1["rainfall"] > 10) or (n2["rain_prob"] > 60 and n2["rainfall"] > 10):
                     rain_safe_skip = True
 
-            IRRIGATION_THRESHOLD_MM = 5.0
-            if rain_safe_skip and current_moisture > (wilting_point + 5):
-                prediction["irrigate"], prediction["amount_mm"], prediction["gross_amount_mm"] = False, 0.0, 0.0
-                prediction["reason"] = "Rain is expected in the next 48 hours. Conserving water by skipping today."
-            elif prediction["irrigate"]:
-                if prediction["amount_mm"] < IRRIGATION_THRESHOLD_MM:
-                    prediction["irrigate"], prediction["amount_mm"], prediction["gross_amount_mm"] = False, 0.0, 0.0
-                    prediction["reason"] = "Soil moisture is stable."
-                else:
-                    prediction["reason"] = self._generate_reason(w, current_moisture, wilting_point, growth_stage)
-            else:
-                prediction["reason"] = "Conditions are optimal. Surface moisture is sufficient."
+            if rain_safe_skip and current_moisture > (wilting_point + 3):
+                prediction["irrigate"] = False
+                prediction["reason"] = "Rain forecasted in next 48h. Postponing irrigation."
 
+            # 6. Final Recommendation Structure
             if prediction["irrigate"]:
-                # Only the 'efficiency' part of the water reaches the root zone
+                prediction["gross_amount_mm"] = round(prediction["amount_mm"] / efficiency, 1)
+                prediction["reason"] = prediction.get("reason") or self._generate_reason(w, current_moisture, wilting_point, growth_stage, farmer_input["crop_type"])
+            else:
+                prediction["irrigate"], prediction["amount_mm"], prediction["gross_amount_mm"] = False, 0.0, 0.0
+                prediction["reason"] = f"Moisture ({round(current_moisture,1)}%) is sufficient for the {growth_stage} stage."
+
+            # 7. Update Simulation for the NEXT day
+            if prediction["irrigate"]:
                 current_moisture = min(field_capacity, current_moisture + (prediction["gross_amount_mm"] * efficiency))
                 last_irrigation_applied = prediction["gross_amount_mm"]
             else:
                 last_irrigation_applied = 0.0
+                current_moisture = min(field_capacity, current_moisture + (w["rainfall"] * 0.6))
+            
+            current_moisture = max(0, current_moisture - etc)
 
+            # 8. Record Daily Calendar Step
             if day_idx < 7: conf = {"level": "High", "reason": "Short-term precise forecast"}
             elif day_idx < 16: conf = {"level": "Medium", "reason": "Extended range trend data"}
             else: conf = {"level": "Low", "reason": "Regional historical averages"}
@@ -147,10 +172,17 @@ class ForecastEngine:
             
         return calendar
 
-    def _generate_reason(self, w, moisture, wp, stage):
-        if moisture < wp + 2: return f"CRITICAL: Soil moisture ({round(moisture, 1)}%) is near the wilting point."
-        if w["temp_max"] > 35: return f"Extreme heat detected during {stage} stage."
-        return f"Regular irrigation recommended to support optimal {stage} development."
+    def _generate_reason(self, w, moisture, wp, stage, crop):
+        if moisture < wp + 2.0: 
+            return f"CRITICAL: Soil moisture ({round(moisture, 1)}%) is near the wilting point. Immediate irrigation required to prevent {crop} wilting."
+        
+        if stage in ["Flowering", "Grain Filling"]:
+            return f"CRITICAL STAGE: {crop} is currently in the {stage} stage. Any water stress now will significantly reduce your final yield."
+            
+        if w["temp_max"] > 33: 
+            return f"HEAT ALERT: High temperature ({w['temp_max']}°C) is increasing evaporation. Irrigation recommended to maintain {crop} health."
+            
+        return f"Proactive irrigation recommended to support optimal {stage} development in {crop}."
 
     def _get_growth_stage(self, crop, das):
         if crop == "Sugarcane":
@@ -177,5 +209,4 @@ class ForecastEngine:
         if month in [5, 6]: return "Zaid"
         return "Kharif"
 
-# Singleton
 forecast_engine = ForecastEngine()

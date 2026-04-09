@@ -7,6 +7,8 @@ class CropBase(BaseModel):
     soil_type: str
     sowing_date: date
     expected_harvesting_date: date
+    last_irrigation_date: Optional[datetime] = None
+    upcoming_irrigation_date: Optional[datetime] = None
 
     @field_validator('crop_name')
     @classmethod
@@ -23,8 +25,6 @@ class CropResponse(CropBase):
     id: int
     user_id: int
     crop_type: str
-    last_irrigation_date: Optional[datetime] = None
-    upcoming_irrigation_date: Optional[datetime] = None
     pesticide_details: Optional[str] = None
     fertilizer_details: Optional[str] = None
     created_at: datetime
