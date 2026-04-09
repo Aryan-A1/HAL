@@ -43,3 +43,39 @@ def get_user_crops(
     current_user: User = Depends(get_current_user)
 ):
     return db.query(CropProfile).filter(CropProfile.user_id == current_user.id).all()
+
+@router.get("/{crop_id}", response_model=CropResponse)
+def get_crop_profile(
+    crop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    crop = db.query(CropProfile).filter(
+        CropProfile.id == crop_id, 
+        CropProfile.user_id == current_user.id
+    ).first()
+    if not crop:
+        raise HTTPException(status_code=404, detail="Crop profile not found")
+    return crop
+
+@router.post("/{crop_id}/irrigate", response_model=CropResponse)
+def record_irrigation(
+    crop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    crop = db.query(CropProfile).filter(
+        CropProfile.id == crop_id, 
+        CropProfile.user_id == current_user.id
+    ).first()
+    if not crop:
+        raise HTTPException(status_code=404, detail="Crop profile not found")
+    
+    from datetime import datetime
+    crop.last_irrigation_date = datetime.now()
+    # When they irrigate, we should probably clear the 'upcoming' one until next forecast
+    crop.upcoming_irrigation_date = None
+    
+    db.commit()
+    db.refresh(crop)
+    return crop

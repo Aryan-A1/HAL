@@ -8,6 +8,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Security configurations
+import bcrypt
+if not hasattr(bcrypt, "__about__"):
+    bcrypt.__about__ = type('about', (object,), {'__version__': bcrypt.__version__})
+
 PWD_CONTEXT = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
 SECRET_KEY = os.getenv("SECRET_KEY")
