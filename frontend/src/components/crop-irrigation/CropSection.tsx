@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Leaf, Trash2, Sprout } from "lucide-react";
+import { Plus, Leaf, Trash2, Sprout, Calendar, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,66 +36,78 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
   };
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-8 h-[2px] bg-secondary rounded-full" />
+            <span className="text-[10px] font-black text-secondary uppercase tracking-[0.2em]">Asset Management</span>
+          </div>
+          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
             Your Crops
           </h2>
-          <p className="text-muted-foreground mt-1">
-            Manage crops to receive personalized irrigation insights
-          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 rounded-xl premium-gradient premium-shadow h-11 px-6 border-none text-white hover:scale-105 transition-transform">
               <Plus className="w-4 h-4" />
-              Add Crop
+              Add New Crop
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="rounded-3xl border-primary/10">
             <DialogHeader>
-              <DialogTitle>Add a New Crop</DialogTitle>
-              <DialogDescription>
-                Enter crop details to receive tailored irrigation advice.
+              <DialogTitle className="text-2xl font-black">Register New Crop</DialogTitle>
+              <DialogDescription className="font-medium">
+                Detailed parameters allow HAL AI to provide more precise watering advice.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Crop Name <span className="text-destructive">*</span>
+            <div className="space-y-5 pt-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                  Crop Species
                 </label>
                 <Input
-                  placeholder="e.g. Wheat, Rice, Tomato"
+                  placeholder="e.g. Basmati Rice, Durum Wheat"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  maxLength={50}
+                  className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Growth Stage
-                </label>
-                <Input
-                  placeholder="e.g. Seedling, Flowering"
-                  value={stage}
-                  onChange={(e) => setStage(e.target.value)}
-                  maxLength={50}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                    Growth Stage
+                  </label>
+                  <Input
+                    placeholder="e.g. Seedling"
+                    value={stage}
+                    onChange={(e) => setStage(e.target.value)}
+                    className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                    Area (Bigha/Acre)
+                  </label>
+                  <Input
+                    placeholder="e.g. 5"
+                    className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">
-                  Notes
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                  Notes / Observations
                 </label>
                 <Input
-                  placeholder="Any additional notes"
+                  placeholder="Soil color, pests, etc."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  maxLength={200}
+                  className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
                 />
               </div>
-              <Button onClick={handleSubmit} className="w-full" disabled={!name.trim()}>
-                Save Crop
+              <Button onClick={handleSubmit} className="w-full h-12 rounded-xl premium-gradient text-white border-none font-bold text-lg mt-2" disabled={!name.trim()}>
+                Deploy Trackers
               </Button>
             </div>
           </DialogContent>
@@ -106,61 +118,77 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-16 px-4 rounded-xl border-2 border-dashed border-border bg-muted/30"
+          className="flex flex-col items-center justify-center py-20 px-6 rounded-[2.5rem] bg-white border border-dashed border-primary/20"
         >
-          <Sprout className="w-16 h-16 text-muted-foreground/50 mb-4" />
-          <h3 className="text-xl font-heading font-semibold text-foreground mb-2">
-            No crops added yet
+          <div className="w-20 h-20 rounded-full bg-primary/5 flex items-center justify-center mb-6">
+            <Sprout className="w-10 h-10 text-primary/40" />
+          </div>
+          <h3 className="text-2xl font-heading font-black text-foreground mb-2">
+            Fields are Empty
           </h3>
-          <p className="text-muted-foreground text-center max-w-sm mb-6">
-            Add crops to receive irrigation insights tailored to your farm.
+          <p className="text-muted-foreground text-center max-w-sm mb-8 font-medium">
+            Register your crops to activate the HAL AI monitoring system.
           </p>
-          <Button onClick={() => setOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Crop
+          <Button onClick={() => setOpen(true)} className="gap-2 rounded-xl premium-gradient px-8 h-12">
+            <Plus className="w-5 h-5" />
+            Add Your First Crop
           </Button>
         </motion.div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence mode="popLayout">
             {crops.map((crop) => (
               <motion.div
                 key={crop.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
                 layout
               >
-                <Card className="hover-lift group">
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-secondary/20 flex items-center justify-center">
-                          <Leaf className="w-5 h-5 text-secondary" />
+                <Card className="border-none shadow-none bg-white p-1 rounded-[2rem] group hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+                  <CardContent className="p-6 rounded-[1.75rem] border border-transparent group-hover:border-primary/10 transition-colors relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -mr-8 -mt-8 transition-transform group-hover:scale-150 duration-700" />
+                    
+                    <div className="flex items-start justify-between relative z-10">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors duration-300">
+                          <Leaf className="w-6 h-6" />
                         </div>
                         <div>
-                          <h4 className="font-heading font-semibold text-foreground">
+                          <h4 className="text-lg font-heading font-black text-foreground leading-tight">
                             {crop.name}
                           </h4>
-                          {crop.stage && (
-                            <span className="text-xs text-muted-foreground">
-                              {crop.stage}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <Tag className="w-3 h-3 text-secondary" />
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                              {crop.stage || "Growth Phase 1"}
                             </span>
-                          )}
+                          </div>
                         </div>
                       </div>
                       <button
                         onClick={() => onRemoveCrop(crop.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
                         aria-label={`Remove ${crop.name}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
+
+                    <div className="mt-6 pt-6 border-t border-dashed border-muted flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-primary/40" />
+                        <span className="text-xs font-bold text-muted-foreground">Registered {new Date(crop.createdAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="px-3 py-1 rounded-full bg-primary/5 text-primary text-[10px] font-black uppercase tracking-tighter">
+                        ACTIVE Monitoring
+                      </div>
+                    </div>
+                    
                     {crop.notes && (
-                      <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
-                        {crop.notes}
-                      </p>
+                      <div className="mt-4 p-3 rounded-xl bg-muted/30 text-[11px] font-medium text-muted-foreground leading-relaxed italic">
+                        "{crop.notes}"
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -169,7 +197,7 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
           </AnimatePresence>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 

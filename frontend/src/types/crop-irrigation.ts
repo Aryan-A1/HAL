@@ -14,4 +14,14 @@ export interface DayWeather {
   temperature?: number;
   recommendation: string;
   irrigationNeeded: boolean;
+  rainfall?: number;
+  rain_prob?: number;
+  wind_speed?: number;
+}
+
+export interface AIInsights {
+  irrigation_days: number;
+  rain_expected: number;
+  storm_alerted: number;
+  summary: string;
 }

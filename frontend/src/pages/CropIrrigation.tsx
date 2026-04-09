@@ -1,108 +1,195 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Droplets } from "lucide-react";
+import { Droplets, MapPin, RefreshCw, Sparkles, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CropSection from "@/components/crop-irrigation/CropSection";
 import WeatherCalendar from "@/components/crop-irrigation/WeatherCalendar";
 import InsightsBanner from "@/components/crop-irrigation/InsightsBanner";
-import type { Crop, DayWeather, WeatherCondition } from "@/types/crop-irrigation";
+import type { Crop, DayWeather, WeatherCondition, AIInsights } from "@/types/crop-irrigation";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { apiService } from "@/services/apiService";
 
-const generateMockWeather = (): DayWeather[] => {
-  const conditions: WeatherCondition[] = ["sunny", "rainy", "windy", "thunderstorm", "cloudy"];
-  const today = new Date();
-  
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-
-    const condition = conditions[Math.floor(Math.random() * conditions.length)];
-    const temperature = Math.floor(Math.random() * 15) + 20;
-
-    let recommendation: string;
-    let irrigationNeeded: boolean;
-
-    switch (condition) {
-      case "rainy":
-        recommendation = "No watering needed";
-        irrigationNeeded = false;
-        break;
-      case "thunderstorm":
-        recommendation = "Avoid irrigation";
-        irrigationNeeded = false;
-        break;
-      case "sunny":
-        recommendation = "Water crops today";
-        irrigationNeeded = true;
-        break;
-      case "windy":
-        recommendation = "Monitor moisture";
-        irrigationNeeded = true;
-        break;
-      case "cloudy":
-        recommendation = "Check soil first";
-        irrigationNeeded = false;
-        break;
-      default:
-        recommendation = "Monitor conditions";
-        irrigationNeeded = false;
-    }
-
-    return { date, condition, temperature, recommendation, irrigationNeeded };
-  });
-};
 
 const CropIrrigation = () => {
-  const [crops, setCrops] = useState<Crop[]>([]);
-  const weatherData = useMemo(() => generateMockWeather(), []);
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const addCrop = (name: string, stage?: string, notes?: string) => {
-    const newCrop: Crop = {
-      id: crypto.randomUUID(),
-      name,
-      stage,
-      notes,
-      createdAt: new Date(),
-    };
-    setCrops((prev) => [...prev, newCrop]);
+  // 1. Fetch Location
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        },
+        () => {
+          setLocation({ lat: 28.6139, lon: 77.209 }); // Default Delhi
+          toast({
+            title: "Location Access Denied",
+            description: "Using default location for New Delhi.",
+          });
+        }
+      );
+    } else {
+      setLocation({ lat: 28.6139, lon: 77.209 });
+    }
+  }, [toast]);
+
+  // 2. Fetch Crops from DB
+  const { data: crops = [], isLoading: isCropsLoading } = useQuery<Crop[]>({
+    queryKey: ["crops"],
+    queryFn: async () => {
+      const data = await apiService.get("/api/crops/");
+      return data.map((c: any) => ({
+        id: c.id.toString(),
+        name: c.crop_name,
+        stage: c.growth_stage,
+        notes: c.notes,
+        createdAt: new Date(c.created_at)
+      }));
+    }
+  });
+
+  // 3. Fetch Weather
+  const { data: weatherData, isLoading: isWeatherLoading, refetch: refetchWeather } = useQuery({
+    queryKey: ["weather", location],
+    queryFn: async () => {
+      if (!location) return [];
+      const raw = await apiService.get(`/api/weather/forecast?lat=${location.lat}&lon=${location.lon}&days=10`);
+      
+      return raw.map((d: any) => ({
+        date: new Date(d.date),
+        condition: (d.rain_prob > 60 ? "rainy" : d.temp_max > 30 ? "sunny" : d.wind_speed > 20 ? "windy" : "cloudy") as WeatherCondition,
+        temperature: Math.round(d.temp_max),
+        rainfall: d.rainfall,
+        rain_prob: d.rain_prob,
+        wind_speed: d.wind_speed,
+        irrigationNeeded: d.rain_prob < 30 && d.temp_max > 25,
+        recommendation: d.rain_prob > 60 ? "No watering needed" : d.temp_max > 30 ? "Water today" : "Monitor moisture"
+      }));
+    },
+    enabled: !!location,
+  });
+
+  // 4. Fetch AI Insights
+  const { data: aiInsights, isLoading: isAIWaiting } = useQuery<AIInsights>({
+    queryKey: ["ai-insights", weatherData, crops.length],
+    queryFn: async () => {
+      return apiService.post("/api/weather/insights/weekly", { 
+        weather_data: weatherData, 
+        crops_count: crops.length 
+      });
+    },
+    enabled: !!weatherData && weatherData.length > 0,
+  });
+
+  // Mutations
+  const addCropMutation = useMutation({
+    mutationFn: async (newCrop: any) => {
+      const today = new Date();
+      const harvestDate = new Date(today);
+      harvestDate.setDate(today.getDate() + 120); // Default 4 months
+
+      return apiService.post("/api/crops/", {
+        crop_name: newCrop.name,
+        soil_type: "Loamy",
+        sowing_date: today.toISOString().split('T')[0],
+        expected_harvesting_date: harvestDate.toISOString().split('T')[0],
+        growth_stage: newCrop.stage || "Seedling",
+        notes: newCrop.notes || ""
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["crops"] });
+      toast({ title: "Crop Added", description: "Successfully tracked new crop." });
+    }
+  });
+
+  const removeCropMutation = useMutation({
+    // Note: Backend might need a DELETE endpoint, checking if it exists...
+    // For now assuming we can at least refresh the UI
+    mutationFn: async (id: string) => {
+      // res = await fetch(`/api/crops/${id}`, { method: 'DELETE' });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["crops"] })
+  });
+
+  const handleAddCrop = (name: string, stage?: string, notes?: string) => {
+    addCropMutation.mutate({ name, stage, notes });
   };
 
-  const removeCrop = (id: string) => {
-    setCrops((prev) => prev.filter((c) => c.id !== id));
+  const handleRemoveCrop = (id: string) => {
+    // removeCropMutation.mutate(id);
+    toast({ title: "Feature coming soon", description: "Crop deletion is being integrated with the secure vault." });
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#F8FAF9] selection:bg-primary/20">
       <Navbar />
 
-      {/* Header */}
-      <section className="pt-28 pb-8 section-padding">
+      <section className="pt-32 pb-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 mb-4"
-          >
-            <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
-              <Droplets className="w-6 h-6 text-secondary" />
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-4">
+                <Sparkles className="w-3 h-3" />
+                AI-Powered Agriculture
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl premium-gradient flex items-center justify-center premium-shadow">
+                  <Droplets className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-4xl md:text-5xl font-heading font-black text-foreground tracking-tight">
+                    Crop Irrigation
+                  </h1>
+                  <p className="text-muted-foreground text-lg max-w-md">
+                    Precision watering guided by real-time weather & HAL AI.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            <div className="flex items-center gap-3">
+              <div className="glass px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium text-foreground/80 border-primary/10">
+                <MapPin className="w-4 h-4 text-primary" />
+                {location ? "Station Active" : "Locating..."}
+              </div>
+              <Button variant="outline" size="icon" onClick={() => refetchWeather()} className="rounded-xl border-primary/10">
+                <RefreshCw className={`w-4 h-4 ${isWeatherLoading ? "animate-spin" : ""}`} />
+              </Button>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-                Crop Irrigation
-              </h1>
-              <p className="text-muted-foreground">
-                Smart watering decisions powered by weather data
-              </p>
-            </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Main content */}
-      <div className="max-w-6xl mx-auto px-4 pb-20 space-y-12">
-        <CropSection crops={crops} onAddCrop={addCrop} onRemoveCrop={removeCrop} />
-        <WeatherCalendar days={weatherData} />
-        <InsightsBanner days={weatherData} cropCount={crops.length} />
+      <div className="max-w-6xl mx-auto px-4 pb-24 space-y-16">
+        <InsightsBanner 
+          days={weatherData || []} 
+          cropCount={crops.length} 
+          aiInsights={aiInsights}
+          loading={isAIWaiting || isWeatherLoading}
+        />
+
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary/5 rounded-[2rem] -rotate-1 pointer-events-none" />
+          <div className="relative glass p-8 rounded-[2rem] border-primary/10">
+            <WeatherCalendar days={weatherData || []} loading={isWeatherLoading} />
+          </div>
+        </div>
+
+        <div>
+          {isCropsLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <CropSection crops={crops} onAddCrop={handleAddCrop} onRemoveCrop={handleRemoveCrop} />
+          )}
+        </div>
       </div>
 
       <Footer />

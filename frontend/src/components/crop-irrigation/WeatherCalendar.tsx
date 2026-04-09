@@ -9,58 +9,61 @@ import {
   Droplets,
   ChevronLeft,
   ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import type { DayWeather } from "@/types/crop-irrigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WeatherCalendarProps {
   days: DayWeather[];
+  loading?: boolean;
 }
 
 const conditionConfig = {
   sunny: {
     icon: Sun,
     label: "Sunny",
-    bgClass: "bg-amber-50",
+    bgClass: "bg-amber-500/10",
     iconClass: "text-amber-500",
-    borderClass: "border-amber-200",
+    borderClass: "border-amber-500/20",
   },
   rainy: {
     icon: CloudRain,
     label: "Rainy",
-    bgClass: "bg-blue-50",
+    bgClass: "bg-blue-500/10",
     iconClass: "text-blue-500",
-    borderClass: "border-blue-200",
+    borderClass: "border-blue-500/20",
   },
   windy: {
     icon: Wind,
     label: "Windy",
-    bgClass: "bg-slate-50",
-    iconClass: "text-slate-500",
-    borderClass: "border-slate-200",
+    bgClass: "bg-emerald-500/10",
+    iconClass: "text-emerald-500",
+    borderClass: "border-emerald-500/20",
   },
   thunderstorm: {
     icon: CloudLightning,
     label: "Storm",
-    bgClass: "bg-purple-50",
+    bgClass: "bg-purple-500/10",
     iconClass: "text-purple-500",
-    borderClass: "border-purple-200",
+    borderClass: "border-purple-500/20",
   },
   cloudy: {
     icon: Cloud,
     label: "Cloudy",
-    bgClass: "bg-gray-50",
-    iconClass: "text-gray-500",
-    borderClass: "border-gray-200",
+    bgClass: "bg-slate-500/10",
+    iconClass: "text-slate-500",
+    borderClass: "border-slate-500/20",
   },
 };
 
-const WeatherCalendar = ({ days }: WeatherCalendarProps) => {
+const WeatherCalendar = ({ days, loading }: WeatherCalendarProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
-    const amount = 280;
+    const amount = 300;
     scrollRef.current.scrollBy({
       left: dir === "left" ? -amount : amount,
       behavior: "smooth",
@@ -71,41 +74,48 @@ const WeatherCalendar = ({ days }: WeatherCalendarProps) => {
   today.setHours(0, 0, 0, 0);
 
   return (
-    <section className="space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground">
-            Weather Forecast
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-8 h-[2px] bg-primary rounded-full" />
+            <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Live Outlook</span>
+          </div>
+          <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
+            10-Day Forecast
           </h2>
-          <p className="text-muted-foreground mt-1">
-            7-day outlook with irrigation recommendations
-          </p>
         </div>
-        <div className="hidden sm:flex gap-2">
+        <div className="flex gap-2">
           <button
             onClick={() => scroll("left")}
-            className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+            className="w-10 h-10 rounded-xl border border-primary/10 flex items-center justify-center hover:bg-white hover:shadow-lg transition-all"
             aria-label="Scroll left"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5 text-primary" />
           </button>
           <button
             onClick={() => scroll("right")}
-            className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-muted transition-colors"
+            className="w-10 h-10 rounded-xl border border-primary/10 flex items-center justify-center hover:bg-white hover:shadow-lg transition-all"
             aria-label="Scroll right"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5 text-primary" />
           </button>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+        className="flex gap-5 overflow-x-auto pb-6 pt-2 scrollbar-hide snap-x snap-mandatory px-1"
         style={{ scrollbarWidth: "none" }}
       >
-        {days.map((day, i) => {
-          const config = conditionConfig[day.condition];
+        {(loading ? Array(10).fill(null) : days).map((day, i) => {
+          if (!day) return (
+            <div key={i} className="snap-start min-w-[150px]">
+              <Skeleton className="h-[220px] w-full rounded-2xl bg-white/50" />
+            </div>
+          );
+
+          const config = conditionConfig[day.condition as keyof typeof conditionConfig] || conditionConfig.sunny;
           const Icon = config.icon;
           const dayDate = new Date(day.date);
           dayDate.setHours(0, 0, 0, 0);
@@ -114,54 +124,55 @@ const WeatherCalendar = ({ days }: WeatherCalendarProps) => {
           return (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.05 }}
               className="snap-start"
             >
               <Card
-                className={`min-w-[160px] w-[160px] hover-lift ${
-                  isToday ? "ring-2 ring-primary" : ""
+                className={`min-w-[150px] w-[150px] border-none shadow-none transition-all duration-300 ${
+                  isToday ? "scale-105" : "hover:scale-102"
                 }`}
               >
-                <CardContent className="p-4 flex flex-col items-center text-center gap-3">
-                  <div className="text-sm font-medium text-foreground">
-                    {dayDate.toLocaleDateString("en-US", { weekday: "short" })}
-                    {isToday && (
-                      <span className="ml-1.5 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                        Today
-                      </span>
-                    )}
+                <CardContent className={`p-0 rounded-2xl overflow-hidden bg-white border border-transparent ${isToday ? "ring-2 ring-primary ring-offset-2" : "group-hover:border-primary/5 shadow-sm"}`}>
+                  <div className={`p-4 text-center space-y-3 ${isToday ? "bg-primary/5" : ""}`}>
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-black text-foreground uppercase tracking-tight">
+                        {dayDate.toLocaleDateString("en-US", { weekday: "short" })}
+                      </div>
+                      <div className="text-[10px] font-bold text-muted-foreground/60">
+                        {dayDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </div>
+                    </div>
+
+                    <div className={`w-12 h-12 rounded-full mx-auto ${config.bgClass} flex items-center justify-center transition-transform hover:rotate-12`}>
+                      <Icon className={`w-6 h-6 ${config.iconClass}`} />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-xl font-black text-foreground flex items-center justify-center gap-1">
+                        {day.temperature ?? "--"}
+                        <span className="text-xs font-bold text-muted-foreground">°C</span>
+                      </div>
+                      <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        {config.label}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    {dayDate.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </div>
-                  <div
-                    className={`w-14 h-14 rounded-full ${config.bgClass} flex items-center justify-center`}
-                  >
-                    <Icon className={`w-7 h-7 ${config.iconClass}`} />
-                  </div>
-                  <span className="text-sm font-medium text-foreground">
-                    {config.label}
-                  </span>
-                  {day.temperature !== undefined && (
-                    <span className="text-xs text-muted-foreground">
-                      {day.temperature}°C
-                    </span>
-                  )}
-                  <div
-                    className={`w-full rounded-lg px-3 py-2 text-xs font-medium ${
-                      day.irrigationNeeded
-                        ? "bg-secondary/15 text-secondary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <Droplets className="w-3 h-3" />
-                      {day.recommendation}
+
+                  <div className={`px-3 py-3 text-[10px] font-bold text-center border-t border-dashed ${day.irrigationNeeded ? "bg-blue-50/50 text-blue-700" : "bg-muted/30 text-muted-foreground"}`}>
+                    <div className="flex flex-col items-center gap-1">
+                      {day.irrigationNeeded ? (
+                        <>
+                          <Droplets className="w-3 h-3 animate-bounce" />
+                          <span>IRRIGATE</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="w-3 h-3 text-emerald-500" />
+                          <span>OPTIMAL</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -170,7 +181,7 @@ const WeatherCalendar = ({ days }: WeatherCalendarProps) => {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 };
 

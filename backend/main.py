@@ -8,7 +8,7 @@ from typing import Optional
 import uvicorn
 
 # Routers and DB - these are core and must always be available
-from .routers import auth, crop, scheme
+from .routers import auth, crop, scheme, weather
 from .database import engine, Base
 
 # Try to import optional routers (may not exist in all branches)
@@ -26,6 +26,7 @@ app = FastAPI(title="HAL API - Intelligent Agriculture")
 app.include_router(auth.router, prefix="/api")
 app.include_router(crop.router, prefix="/api")
 app.include_router(scheme.router, prefix="/api")
+app.include_router(weather.router, prefix="/api")
 if HAS_EXTRA_ROUTERS:
     app.include_router(chatbot.router, prefix="/api")
     app.include_router(irrigation.router, prefix="/api")
@@ -66,4 +67,4 @@ def get_irrigation_forecast(request: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

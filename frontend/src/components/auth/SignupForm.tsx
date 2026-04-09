@@ -23,6 +23,9 @@ const formSchema = z
     full_name: z.string().min(2, 'Name must be at least 2 characters'),
     email: z.string().email('Invalid email address'),
     phone_number: z.string().optional(),
+    country: z.string().optional(),
+    state: z.string().optional(),
+    city: z.string().optional(),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string().min(6, 'Password must be at least 6 characters'),
   })
@@ -45,6 +48,9 @@ export function SignupForm() {
       full_name: '',
       email: '',
       phone_number: '',
+      country: '',
+      state: '',
+      city: '',
       password: '',
       confirmPassword: '',
     },
@@ -58,6 +64,9 @@ export function SignupForm() {
         full_name: data.full_name,
         email: data.email,
         phone_number: data.phone_number || undefined,
+        country: data.country || undefined,
+        state: data.state || undefined,
+        city: data.city || undefined,
         password: data.password,
       };
 
@@ -108,6 +117,52 @@ export function SignupForm() {
               <FormLabel>Phone Number (Optional)</FormLabel>
               <FormControl>
                 <Input placeholder="+1234567890" disabled={isLoading} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="p-2 bg-yellow-100 text-yellow-800 rounded text-xs font-bold mb-2">
+          LOCATION DETAILS SECTION
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Country (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="India" disabled={isLoading} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="state"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>State (Optional)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Maharashtra" disabled={isLoading} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="Mumbai" disabled={isLoading} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

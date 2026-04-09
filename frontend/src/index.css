@@ -73,4 +73,24 @@
   .section-padding {
     @apply py-16 md:py-24 px-4;
   }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-lg;
+  }
+
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-md border border-white/10 shadow-xl;
+  }
+
+  .premium-gradient {
+    background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #43A047 100%);
+  }
+
+  .premium-shadow {
+    box-shadow: 0 10px 30px -10px rgba(27, 94, 32, 0.2);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
 }
