@@ -19,6 +19,7 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(crop.router, prefix="/api")
 app.include_router(scheme.router, prefix="/api")
 app.include_router(irrigation.router, prefix="/api")
+app.include_router(scheme.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,4 +34,4 @@ def read_root():
     return {"status": "online", "message": "HAL Master Backend is ready."}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5001)
