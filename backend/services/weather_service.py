@@ -34,12 +34,12 @@ class WeatherService:
             for i in range(len(daily_data.get("time", []))):
                 results.append({
                     "date": daily_data["time"][i],
-                    "temp_max": daily_data["temperature_2m_max"][i],
-                    "rainfall": daily_data["precipitation_sum"][i],
-                    "rain_prob": daily_data.get("precipitation_probability_max", [0]*len(daily_data["time"]))[i],
-                    "wind_speed": daily_data["windspeed_10m_max"][i],
-                    "sunlight_hours": round(daily_data["sunshine_duration"][i] / 3600, 2),
-                    "humidity": daily_data["relative_humidity_2m_mean"][i]
+                    "temp_max": daily_data["temperature_2m_max"][i] or 25,
+                    "rainfall": daily_data["precipitation_sum"][i] or 0,
+                    "rain_prob": daily_data.get("precipitation_probability_max", [0]*len(daily_data["time"]))[i] or 0,
+                    "wind_speed": daily_data["windspeed_10m_max"][i] or 0,
+                    "sunlight_hours": round((daily_data["sunshine_duration"][i] or 0) / 3600, 2),
+                    "humidity": daily_data["relative_humidity_2m_mean"][i] or 50
                 })
             
             return results

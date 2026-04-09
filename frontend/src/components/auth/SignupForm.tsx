@@ -58,7 +58,7 @@ export function SignupForm() {
     },
   });
 
-  async function onSubmit(data: SignupFormValues) {
+  const onSubmit = async (data: SignupFormValues) => {
     try {
       setIsLoading(true);
       
@@ -72,19 +72,20 @@ export function SignupForm() {
         password: data.password,
       };
 
-      const result = await authApi.signup(payload);
+      const response = await authApi.signup(payload);
       
-      // Auto-login the user
-      login(result.user, result.access_token);
+      // Auto-login: Store user and token in the global auth store
+      login(response.user, response.access_token);
       
       toast.success('Account created and logged in!');
       navigate('/dashboard');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to sign up');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to sign up';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>

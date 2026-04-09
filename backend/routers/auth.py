@@ -71,8 +71,8 @@ def signup(user_in: UserCreate, db: Session = Depends(get_db)):
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-        
-        # Log them in automatically by returning a token
+
+        # Auto-login after signup by returning a token and user payload.
         access_token = create_access_token(subject=db_user.id)
         return {
             "access_token": access_token,

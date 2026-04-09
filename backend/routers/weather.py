@@ -6,7 +6,7 @@ from typing import List, Optional, Dict
 router = APIRouter(prefix="/weather", tags=["weather"])
 
 @router.get("/forecast")
-def get_weather_forecast(lat: float, lon: float, days: int = 10):
+def get_weather_forecast(lat: float, lon: float, days: int = 16):
     """
     Get weather forecast for a specific location.
     """
