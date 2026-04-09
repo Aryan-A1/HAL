@@ -6,9 +6,9 @@ import uvicorn
 
 # New Import path for HAL structure
 # Absolute Import for HAL structure
-from backend.services.irrigation.forecast_engine import forecast_engine
-from backend.routers import auth, crop, scheme
-from backend.database import engine, Base
+from services.irrigation.forecast_engine import forecast_engine
+from routers import auth, crop, scheme
+from database import engine, Base
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -22,7 +22,7 @@ app.include_router(scheme.router, prefix="/api")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

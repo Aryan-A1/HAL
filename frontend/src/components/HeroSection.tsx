@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import heroImg from "@/assets/hero-illustration.png";
+import heroImg from "@/assets/pngKissan.png";
 
 const HeroSection = () => {
   return (
@@ -17,7 +17,7 @@ const HeroSection = () => {
               <span className="text-secondary">Powered by Intelligence</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground max-w-lg leading-relaxed">
-              HAL uses cutting-edge AI to detect crop diseases early, optimize irrigation schedules, and boost your farm's productivity — all from a single dashboard.
+              HAL uses cutting-edge AI to detect crop diseases early, optimize irrigation schedules, and boost your farm's productivity - all from a single dashboard.
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -35,7 +35,11 @@ const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="flex justify-center"
           >
-            <img src={heroImg} alt="AI-powered farming assistant" className="w-full max-w-md lg:max-w-lg" />
+            <img 
+              src={heroImg} 
+              alt="AI-powered farming assistant" 
+              className="w-[150%] max-w-[150%] -translate-x-[100px] object-contain" 
+            />
           </motion.div>
         </div>
       </div>
