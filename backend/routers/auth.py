@@ -30,6 +30,11 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
+@router.post("/logout")
+def logout(current_user: User = Depends(get_current_user)):
+    # Stateless JWT logout: client should discard the token.
+    return {"message": "Logged out successfully"}
+
 @router.post("/signup", response_model=UserResponse)
 def signup(user_in: UserCreate, db: Session = Depends(get_db)):
     # Check if user already exists
