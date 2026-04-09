@@ -4,6 +4,7 @@ import { Menu, X, Leaf } from "lucide-react";
 
 const navItems = [
   { label: "Home", href: "/#home" },
+  { label: "Govt Schemes", href: "/schemes" },
   { label: "Crop Disease", href: "/crop-disease" },
   { label: "Crop Irrigation", href: "/crop-irrigation" },
   { label: "Catch Up on Crops", href: "/#catch-up-on-crops" },

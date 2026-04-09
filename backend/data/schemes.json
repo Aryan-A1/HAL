@@ -24,7 +24,7 @@
     "benefit": "Improves soil fertility and crop productivity",
     "crop": "all",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.myscheme.gov.in"
   },
   {
     "id": 4,
@@ -33,7 +33,7 @@
     "benefit": "Ensures water availability and improves water efficiency",
     "crop": "all",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.myscheme.gov.in"
   },
   {
     "id": 5,
@@ -42,7 +42,7 @@
     "benefit": "Better price discovery and transparent trading",
     "crop": "all",
     "state": "all",
-    "source": "https://enam.gov.in"
+    "source": "https://www.india.gov.in"
   },
   {
     "id": 6,
@@ -51,7 +51,7 @@
     "benefit": "Low-interest loans for agriculture needs",
     "crop": "all",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.myscheme.gov.in"
   },
   {
     "id": 7,
@@ -60,7 +60,7 @@
     "benefit": "₹3000 monthly pension after age 60",
     "crop": "all",
     "state": "all",
-    "source": "https://maandhan.in"
+    "source": "https://www.india.gov.in"
   },
   {
     "id": 8,
@@ -69,7 +69,7 @@
     "benefit": "Financial assistance for organic farming",
     "crop": "all",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.myscheme.gov.in"
   },
   {
     "id": 9,
@@ -78,7 +78,7 @@
     "benefit": "Improves productivity of rice, wheat, pulses",
     "crop": "wheat",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.india.gov.in"
   },
   {
     "id": 10,
@@ -87,7 +87,7 @@
     "benefit": "Funding for agriculture infrastructure and innovation",
     "crop": "all",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.myscheme.gov.in"
   },
   {
     "id": 11,
@@ -96,7 +96,7 @@
     "benefit": "Support for bamboo farming and marketing",
     "crop": "bamboo",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.myscheme.gov.in"
   },
   {
     "id": 12,
@@ -105,6 +105,6 @@
     "benefit": "Loans for storage, cold chains, processing units",
     "crop": "all",
     "state": "all",
-    "source": "https://agricoop.gov.in"
+    "source": "https://www.india.gov.in"
   }
 ]

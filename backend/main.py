@@ -17,7 +17,7 @@ app = FastAPI(title="HAL API - Intelligent Agriculture")
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(crop.router, prefix="/api")
-app.include_router(scheme.router, prefix="/api")
+app.include_router(scheme.router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,4 +57,4 @@ def get_irrigation_forecast(request: ForecastRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=5001)
