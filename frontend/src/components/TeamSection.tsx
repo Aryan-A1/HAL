@@ -1,11 +1,31 @@
 import { motion } from "framer-motion";
-import { Linkedin, Twitter, Instagram } from "lucide-react";
+import { Linkedin, Mail, Instagram } from "lucide-react";
 
 const team = [
-  { name: "Aryan Kumar Singh" },
-  { name: "Krishan Goyal" },
-  { name: "Sejal Jaswal" },
-  { name: "Harsh Thakur" },
+  { 
+    name: "Aryan Kumar Singh",
+    linkedin: "https://www.linkedin.com/in/aryan-kumar-singh-784289314/",
+    instagram: "https://www.instagram.com/aryan_variant/",
+    email: "aryankumarsingh9370@gmail.com"
+  },
+  { 
+    name: "Sejal Jaswal",
+    linkedin: "https://www.linkedin.com/in/sejaljaswal/",
+    instagram: "https://www.instagram.com/sejal__jaswal/",
+    email: "sejaljaswal2020@gmail.com"
+  },
+  { 
+    name: "Harsh Thakur",
+    linkedin: "https://www.linkedin.com/in/harsh-thakur-21080a32a/",
+    instagram: "https://www.instagram.com/absolutelyitsharsh/",
+    email: "tsayamonly@gmail.com"
+  },
+  { 
+    name: "Krishan Goyal",
+    linkedin: "https://www.linkedin.com/in/krishangoyal717/",
+    instagram: "https://www.instagram.com/krishangoyal_23/",
+    email: "krishangoyal717@gmaill.com"
+  },
 ];
 
 const container = {
@@ -20,7 +40,7 @@ const item = {
 
 const TeamSection = () => {
   return (
-    <section className="section-padding bg-muted/30">
+    <section id="team" className="section-padding bg-muted/30">
       <div className="container mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground">
           Meet Our Team
@@ -45,9 +65,31 @@ const TeamSection = () => {
               </div>
               <h4 className="mt-4 font-bold text-foreground text-sm">{member.name}</h4>
               <div className="flex justify-center gap-3 mt-3">
-                <a href="#" className="text-muted-foreground hover:text-secondary transition-colors"><Linkedin size={16} /></a>
-                <a href="#" className="text-muted-foreground hover:text-secondary transition-colors"><Twitter size={16} /></a>
-                <a href="#" className="text-muted-foreground hover:text-secondary transition-colors"><Instagram size={16} /></a>
+                <a 
+                  href={member.linkedin} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-muted-foreground hover:text-secondary transition-colors"
+                  title="LinkedIn"
+                >
+                  <Linkedin size={16} />
+                </a>
+                <a 
+                  href={`mailto:${member.email}`} 
+                  className="text-muted-foreground hover:text-secondary transition-colors"
+                  title="Email"
+                >
+                  <Mail size={16} />
+                </a>
+                <a 
+                  href={member.instagram} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-muted-foreground hover:text-secondary transition-colors"
+                  title="Instagram"
+                >
+                  <Instagram size={16} />
+                </a>
               </div>
             </motion.div>
           ))}
