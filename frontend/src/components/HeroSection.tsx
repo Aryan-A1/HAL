@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import heroImg from "@/assets/pngKissan.png";
+import CircularText from "./CircularText";
 
 const HeroSection = () => {
   return (
@@ -33,12 +34,22 @@ const HeroSection = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="flex justify-center"
+            className="flex justify-center relative z-0"
           >
+            {/* Spinning badge centered around the farmer's head, behind the image */}
+            <div className="absolute top-[25%] left-[55%] md:top-[28%] md:left-[65%] lg:top-[30%] lg:left-[68%] -translate-x-1/2 -translate-y-1/2 z-[-1] pointer-events-auto">
+              <CircularText
+                text="Grow Smarter • Farm Better • Harvest More • "
+                onHover="speedUp"
+                spinDuration={20}
+                className="text-primary w-[200px] h-[200px] md:w-[280px] md:h-[280px] lg:w-[320px] lg:h-[320px]"
+              />
+            </div>
+            
             <img 
               src={heroImg} 
               alt="AI-powered farming assistant" 
-              className="w-[150%] max-w-[150%] -translate-x-[100px] object-contain" 
+              className="w-[150%] max-w-[150%] -translate-x-[80px] md:-translate-x-[100px] object-contain relative z-10" 
             />
           </motion.div>
         </div>
