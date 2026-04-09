@@ -58,7 +58,7 @@ const CropIrrigation = () => {
     queryKey: ["weather", location],
     queryFn: async () => {
       if (!location) return [];
-      const raw = await apiService.get(`/api/weather/forecast?lat=${location.lat}&lon=${location.lon}&days=10`);
+      const raw = await apiService.get(`/api/weather/forecast?lat=${location.lat}&lon=${location.lon}&days=16`);
       
       return raw.map((d: any) => ({
         date: new Date(d.date),

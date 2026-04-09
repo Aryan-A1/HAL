@@ -5,6 +5,7 @@ import * as z from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { authApi } from '@/services/authApi';
+import { useAuthStore } from '@/store/useAuthStore';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ export function SignupForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(formSchema),
@@ -56,7 +58,7 @@ export function SignupForm() {
     },
   });
 
-  async function onSubmit(data: SignupFormValues) {
+  const onSubmit = async (data: SignupFormValues) => {
     try {
       setIsLoading(true);
       
@@ -70,15 +72,19 @@ export function SignupForm() {
         password: data.password,
       };
 
-      await authApi.signup(payload);
-      toast.success('Account created successfully!');
-      navigate('/login');
+      const response = await authApi.signup(payload);
+      
+      // Auto-login: Store user and token in the global auth store
+      login(response.user, response.access_token);
+      
+      toast.success('Account created successfully! Welcome to HAL AI.');
+      navigate('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign up');
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
