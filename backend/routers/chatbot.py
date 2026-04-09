@@ -49,18 +49,57 @@ def _transcribe_audio_groq(client: Groq, filepath: str) -> str:
         return response.text
 
 
+def _is_agriculture_related(text: str) -> bool:
+    """Simple check for agriculture-related keywords."""
+    agri_keywords = {
+        "crop", "farm", "soil", "water", "irrigation", "disease", "pest", "fertilizer", 
+        "seed", "harvest", "season", "weather", "market", "mandi", "scheme", "subsidy",
+        "farmer", "kisan", "planting", "sowing", "pesticide", "organic", "cattle", 
+        "livestock", "tractor", "plow", "yield", "field", "monsoon", "rain"
+    }
+    text_lower = text.lower()
+    return any(keyword in text_lower for keyword in agri_keywords)
+
+
 def _get_answer_groq(client: Groq, question: str) -> str:
+    # First pass: Domain check using keywords (lenient to allow common greetings)
+    # Greetings like "hi", "hello" should still be answered by system prompt logic
+    common_greetings = {"hi", "hello", "namaste", "hey", "help"}
+    text_lower = question.lower().strip()
+    
+    if not _is_agriculture_related(question) and text_lower not in common_greetings:
+        # We still send to LLM but the system prompt will handle it, 
+        # or we can return early for obviously out-of-scope stuff.
+        # Let's let the LLM handle nuanced questions but use a strict system prompt.
+        pass
+
+    system_prompt = (
+        "You are HAL AI, a specialized agriculture assistant for Indian farmers. "
+        "You ONLY answer questions related to agriculture, crops, irrigation, plant diseases, "
+        "soil health, government farming schemes, and general farming practices. "
+        "\n\n"
+        "If the user asks anything outside this domain (e.g., history, math, code, entertainment, "
+        "general advice), politely respond: 'I can only help with agriculture-related queries.' "
+        "\n\n"
+        "Keep responses simple, concise, and use farmer-friendly language without technical jargon. "
+        "Use a friendly yet professional tone. Answer in the same language as the user (English, Hindi, or Hinglish)."
+    )
+
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[
-            {
-                "role": "system", 
-                "content": "You are HAL AI, a specialized agriculture assistant for Indian farmers. Answer the user's question directly and concisely. Only provide seasonal overviews or detailed guides if explicitly asked. Use friendly yet professional language."
-            },
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": question},
         ],
+        temperature=0.3, # Lower temperature for more focused responses
     )
     return response.choices[0].message.content
+
+
+def _mock_answer(question: str) -> str:
+    if not _is_agriculture_related(question):
+        return "I can only help with agriculture-related queries."
+    return f"I'm HAL AI. I received your question: '{question}'. (Note: Provide GROQ_API_KEY in .env for real AI responses)"
 
 
 def _text_to_audio(text: str, filename: str) -> str:

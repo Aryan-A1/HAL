@@ -2,8 +2,8 @@ import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from services.weather_service import weather_service
-from services.irrigation.ml_service import get_ml_service
+from backend.services.weather_service import weather_service
+from backend.services.irrigation.ml_service import get_ml_service
 
 class ForecastEngine:
     def __init__(self):
