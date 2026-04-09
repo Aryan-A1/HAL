@@ -2,12 +2,19 @@ import joblib
 import os
 import pandas as pd
 import json
+from pathlib import Path
 
 class MLService:
     def __init__(self):
-        # Fixed environment path for HAL Master Server
-        self.base_dir = r"c:\Users\krish\.gemini\antigravity\scratch\smart-irrigation-system"
-        self.models_dir = os.path.join(self.base_dir, "models/irrigation")
+        # Prefer env override, otherwise resolve repo root relative to this file.
+        base_dir = os.getenv("HAL_BASE_DIR")
+        if base_dir:
+            base_path = Path(base_dir)
+        else:
+            base_path = Path(__file__).resolve().parents[3]
+
+        self.base_dir = str(base_path)
+        self.models_dir = str(base_path / "models" / "irrigation")
         
         # Load the models
         clf_path = os.path.join(self.models_dir, "classifier.pkl")
