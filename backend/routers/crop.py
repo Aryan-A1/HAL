@@ -18,7 +18,7 @@ CROP_TYPE_MAPPING = {
     "maize": "Kharif"
 }
 
-@router.post("/", response_model=CropResponse)
+@router.post("", response_model=CropResponse)
 def create_crop_profile(
     crop_in: CropCreate, 
     db: Session = Depends(get_db),
@@ -37,7 +37,7 @@ def create_crop_profile(
     db.refresh(db_crop)
     return db_crop
 
-@router.get("/", response_model=List[CropResponse])
+@router.get("", response_model=List[CropResponse])
 def get_user_crops(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)

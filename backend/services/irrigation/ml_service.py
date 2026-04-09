@@ -1,11 +1,14 @@
-import joblib
 import os
-import pandas as pd
 import json
 from pathlib import Path
 
 class MLService:
     def __init__(self):
+        import joblib
+        import pandas as pd
+
+        self._pd = pd
+
         # Prefer env override, otherwise resolve repo root relative to this file.
         base_dir = os.getenv("HAL_BASE_DIR")
         if base_dir:
@@ -31,7 +34,7 @@ class MLService:
             self.feature_names = json.load(f)
 
     def predict(self, input_data: dict):
-        df = pd.DataFrame([input_data])
+        df = self._pd.DataFrame([input_data])
         df = df[self.feature_names] # Ensure order
         
         irrigate_needed = bool(self.classifier.predict(df)[0])

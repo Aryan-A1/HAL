@@ -1,0 +1,135 @@
+{
+  "Blight": {
+    "description": "A fungal/bacterial infection causing yellow/brown spots on leaves and withering.",
+    "chemical": "Apply Mancozeb 75% WP at 2.5g/L or Copper Oxychloride spray at recommended dosage every 10-14 days.",
+    "organic": "Spray neem oil solution (5ml/L) or prepare a garlic-chili extract. Apply Trichoderma-based bio-fungicide to soil.",
+    "precautions": "Remove and destroy infected leaves. Ensure proper plant spacing for air circulation. Avoid overhead watering.",
+    "stores": "Local agricultural supply stores for Mancozeb, Neem Oil, and bio-fungicides."
+  },
+  "Common Rust": {
+    "description": "Fungal disease causing reddish-brown pustules on both leaf surfaces.",
+    "chemical": "Apply Propiconazole 25% EC at 1ml/L or Azoxystrobin based fungicides.",
+    "organic": "Use Neem oil or compost tea extracts. Ensure balanced potassium and phosphorus application.",
+    "precautions": "Plant resistant hybrids. Remove infected debris after harvest.",
+    "stores": "Available at major agricultural co-operatives and online stores."
+  },
+  "Gray Leaf Spot": {
+    "description": "Fungal infection creating rectangular pale brown or gray lesions.",
+    "chemical": "Use Pyraclostrobin or Azoxystrobin based systemic fungicides.",
+    "organic": "Crop rotation and maintaining field hygiene are the primary organic defenses.",
+    "precautions": "Rotate with non-host crops. Deep plow infected residues.",
+    "stores": "Visit local agri-input shops."
+  },
+  "Bacterialblight": {
+    "description": "Bacterial disease causing water-soaked to yellowish stripes on leaf blades.",
+    "chemical": "Spray Streptocycline (1g/10L) + Copper Oxychloride (30g/10L).",
+    "organic": "Use Pseudomonas fluorescens bio-formulations. Manage nitrogen fertilizer properly.",
+    "precautions": "Avoid field-to-field water flow from affected plots. Use disease-free seeds.",
+    "stores": "Krishi Kendra or local cooperative societies."
+  },
+  "Blast": {
+    "description": "Spindle-shaped lesions with grayish centers and brown margins.",
+    "chemical": "Apply Tricyclazole 75% WP at 0.6g/L or Isoprothiolane 40% EC at 1.5ml/L.",
+    "organic": "Apply Pseudomonas fluorescens. Balance silicon application in soil.",
+    "precautions": "Avoid excessive nitrogen. Keep fields well-drained. Burn heavily infected straw.",
+    "stores": "Available globally at farm care outlets."
+  },
+  "Brownspot": {
+    "description": "Dark brown, oval to circular spots on leaves and glumes.",
+    "chemical": "Foliar spray of Mancozeb (2.5g/L) or Propiconazole (1ml/L).",
+    "organic": "Seed treatment with Trichoderma viride. Maintain adequate soil nutrition.",
+    "precautions": "Ensure sufficient moisture and avoid nutrient stress.",
+    "stores": "Most agro-chemical retailers."
+  },
+  "Tungro": {
+    "description": "Viral disease transmitted by green leafhoppers, causing stunting and yellow-orange leaves.",
+    "chemical": "Control vectors using Imidacloprid 17.8 SL at 0.3ml/L.",
+    "organic": "Release biocontrol agents like spiders and ladybird beetles. Trap crops.",
+    "precautions": "Sync planting dates. Remove infected plants and weed hosts immediately.",
+    "stores": "Purchase vector-control insecticides from certified retailers."
+  },
+  "diseased cotton leaf": {
+    "description": "General leaf spotting or disease indicating fungal or bacterial issues on cotton.",
+    "chemical": "Copper-based fungicides like Copper Oxychloride 50 WP (3g/L) as a broad-spectrum control.",
+    "organic": "Neem seed kernel extract (NSKE 5%) spray.",
+    "precautions": "Improve drainage. Avoid dense planting. Burn severely infected leaves.",
+    "stores": "Check local cotton zone agro-stores for targeted varieties."
+  },
+  "diseased cotton plant": {
+    "description": "Systemic or widespread infection in the cotton plant, possibly wilt or root rot.",
+    "chemical": "Soil drenching with Carbendazim (1g/L) for wilt.",
+    "organic": "Add Trichoderma enriched Farm Yard Manure before sowing.",
+    "precautions": "Deep summer plowing. Adopt crop rotation with sorghum or maize.",
+    "stores": "Local fertilizer and pesticide agencies."
+  },
+  "Mosaic": {
+    "description": "Viral infection causing mottled, irregular yellowing and dwarfing.",
+    "chemical": "No chemical cure for virus; control insect vectors (aphids/planthoppers) with systemic insecticides.",
+    "organic": "Control vectors using Neem oil. Remove aphids with water jets.",
+    "precautions": "Uproot and bury infected plants. Use virus-tested seeds/cuttings.",
+    "stores": "Local nurseries and certified seed centers."
+  },
+  "RedRot": {
+    "description": "Severe fungal disease rotting the cane tissue completely, causing red internal patches.",
+    "chemical": "Set treatment with Carbendazim 50 WP (1g/L) before planting.",
+    "organic": "Soak setts in Trichoderma culture. Maintain healthy soil flora.",
+    "precautions": "It is highly contagious. Uproot entire affected clumps and burn them. Strict crop rotation.",
+    "stores": "Sugarcane cooperative society stores."
+  },
+  "Leaf Blight": {
+    "description": "Rapid necrosis of leaf tissue caused by fungal pathogens.",
+    "chemical": "Chlorothalonil or Mancozeb sprays.",
+    "organic": "Bordeaux mixture (1%) spray.",
+    "precautions": "Prevent prolonged leaf wetness. Increase spacing.",
+    "stores": "Agri inputs stores near you."
+  },
+  "Black Rust": {
+    "description": "Stem rust causing dark red or brown brick-like pustules.",
+    "chemical": "Spray Propiconazole or Tebuconazole as soon as symptoms appear.",
+    "organic": "Resistant varieties are the only reliable organic defense.",
+    "precautions": "Destroy volunteer host plants. Monitor crops early in the season.",
+    "stores": "Agricultural university extension counters."
+  },
+  "Aphid": {
+    "description": "Small sap-sucking insects that stunt growth and transmit viruses.",
+    "chemical": "Imidacloprid or Thiamethoxam foliar application.",
+    "organic": "Neem oil (3ml/L) spray. Release predators like ladybug larvae.",
+    "precautions": "Monitor heavily during active vegetative growth.",
+    "stores": "Pesticide shops carrying vector-control sprays."
+  },
+  "Healthy": {
+    "description": "The crop appears to be in good health with no visible signs of major disease.",
+    "chemical": "No chemical treatment required. Maintain standard protective fertilizer schedules.",
+    "organic": "Continue normal compost and manure application. Use preventive Neem sprays every month.",
+    "precautions": "Continue monitoring field water levels and check for early signs of pests weekly.",
+    "stores": "N/A"
+  },
+  "healthy": {
+    "description": "The crop appears to be in good health with no visible signs of major disease.",
+    "chemical": "No chemical treatment required. Maintain standard protective fertilizer schedules.",
+    "organic": "Continue normal compost and manure application. Use preventive Neem sprays every month.",
+    "precautions": "Continue monitoring field water levels and check for early signs of pests weekly.",
+    "stores": "N/A"
+  },
+  "fresh cotton leaf": {
+    "description": "The cotton leaf is healthy.",
+    "chemical": "None needed.",
+    "organic": "Standard organic protocols.",
+    "precautions": "Maintain regular watering.",
+    "stores": "N/A"
+  },
+  "fresh cotton plant": {
+    "description": "The cotton plant is healthy.",
+    "chemical": "None needed.",
+    "organic": "Standard organic protocols.",
+    "precautions": "Maintain regular watering.",
+    "stores": "N/A"
+  },
+  "Default": {
+    "description": "Unspecified disease or symptoms affecting crop vitality.",
+    "chemical": "Consult a local agronomist before applying broad-spectrum fungicide or bactericide.",
+    "organic": "Apply generic protective sprays like Neem oil or sour buttermilk solution.",
+    "precautions": "Isolate the affected area, reduce watering, and ensure good drainage.",
+    "stores": "Consult your nearest agricultural extension office."
+  }
+}

@@ -7,7 +7,7 @@ from ..database import get_db
 from ..models.crop import CropProfile
 from .auth import get_current_user
 from ..models.user import User
-from ..services.irrigation.forecast_engine import forecast_engine
+from ..services.irrigation.forecast_engine import get_forecast_engine
 
 router = APIRouter(prefix="/irrigation", tags=["irrigation"])
 
@@ -44,6 +44,7 @@ def get_irrigation_forecast(
                 # Tell engine when we last watered
                 engine_input["last_irrigation_date"] = crop.last_irrigation_date
 
+        forecast_engine = get_forecast_engine()
         calendar = forecast_engine.get_30_day_forecast(engine_input)
         if not calendar:
             raise HTTPException(status_code=500, detail="Weather integration failed.")

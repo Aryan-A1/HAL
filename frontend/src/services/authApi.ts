@@ -1,7 +1,14 @@
 import { User } from '../store/useAuthStore';
 
-// We rely on the Vite proxy so we don't need a hardcoded domain
-const API_BASE = '/api/auth';
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (envUrl) {
+    return envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+  }
+  return '';
+};
+
+const API_BASE = `${getBaseUrl()}/api/auth`;
 
 export interface AuthResponse {
   message?: string;

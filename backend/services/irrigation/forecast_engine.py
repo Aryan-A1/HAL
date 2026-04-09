@@ -209,4 +209,10 @@ class ForecastEngine:
         if month in [5, 6]: return "Zaid"
         return "Kharif"
 
-forecast_engine = ForecastEngine()
+forecast_engine = None
+
+def get_forecast_engine():
+    global forecast_engine
+    if forecast_engine is None:
+        forecast_engine = ForecastEngine()
+    return forecast_engine

@@ -1,4 +1,5 @@
 export interface AnalysisResult {
+  cropName: string;
   diseaseName: string;
   confidence: number;
   description: string;

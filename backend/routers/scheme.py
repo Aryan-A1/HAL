@@ -20,7 +20,7 @@ def load_schemes() -> List[Dict[str, Any]]:
 def get_all_schemes():
     return load_schemes()
 
-@router.get("/")
+@router.get("")
 def get_filtered_schemes(crop: Optional[str] = None, state: Optional[str] = None):
     try:
         schemes = load_schemes()
