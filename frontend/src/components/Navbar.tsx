@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Menu, X, Leaf, User as UserIcon } from "lucide-react";
+import { Menu, X, Leaf, User as UserIcon, Bell } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { authApi } from "@/services/authApi";
 import { Button } from "@/components/ui/button";
+import { useNotificationStore } from "@/store/useNotificationStore";
+import NotificationPanel from "@/components/NotificationPanel";
 
 const navItems = [
   { label: "Home", href: "/#home" },
@@ -15,7 +17,9 @@ const navItems = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const { isAuthenticated, logout } = useAuthStore();
+  const unreadCount = useNotificationStore((s) => s.unreadCount());
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -67,6 +71,23 @@ const Navbar = () => {
               </>
             ) : (
               <>
+                {/* 🔔 Notification Bell */}
+                <div className="relative">
+                  <button
+                    onClick={() => setNotifOpen((o) => !o)}
+                    className="relative p-2 rounded-full text-primary-foreground hover:bg-primary-foreground/10 transition-colors"
+                    aria-label="Notifications"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center leading-none">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  <NotificationPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
+                </div>
+
                 <Link to="/dashboard">
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                     <UserIcon className="w-4 h-4 mr-2" />
@@ -144,6 +165,20 @@ const Navbar = () => {
                 </li>
                 <li>
                   <button
+                    onClick={() => { setMobileOpen(false); setNotifOpen((o) => !o); }}
+                    className="w-full flex items-center gap-2 text-primary-foreground hover:bg-primary-foreground/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <Bell className="w-4 h-4" />
+                    Notifications
+                    {unreadCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </li>
+                <li>
+                  <button
                     onClick={handleLogout}
                     className="w-full text-left text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
@@ -153,6 +188,13 @@ const Navbar = () => {
                </>
             )}
           </ul>
+        </div>
+      )}
+
+      {/* Mobile Notification Panel — rendered outside pill for visibility */}
+      {notifOpen && (
+        <div className="md:hidden absolute left-0 right-0 top-full mt-2 px-3 z-50">
+          <NotificationPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
         </div>
       )}
     </nav>
