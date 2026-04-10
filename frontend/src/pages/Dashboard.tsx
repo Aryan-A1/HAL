@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useProfileStore } from '@/store/useProfileStore';
 import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +10,7 @@ import {
   Droplets, ArrowRight, Calendar, Edit3,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CatchUpWidget } from '@/components/CatchUpWidget';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -122,15 +124,17 @@ export default function Dashboard() {
 
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const storedProfile = useProfileStore((s) => s);
+
   const [profile, setProfile] = useState<ProfileData>({
-    photoUrl: null,
-    phone: user?.phone_number || '',
-    country: user?.country || '',
-    state: user?.state || '',
-    city: user?.city || '',
-    village: '',
-    soilType: '',
-    crops: [],
+    photoUrl: storedProfile.photoUrl ?? null,
+    phone: storedProfile.phone || user?.phone_number || '',
+    country: storedProfile.country || user?.country || '',
+    state: storedProfile.state || user?.state || '',
+    city: storedProfile.city || user?.city || '',
+    village: storedProfile.village || '',
+    soilType: storedProfile.soilType || '',
+    crops: storedProfile.crops || [],
   });
 
   const [saved, setSaved] = useState(false);
@@ -164,14 +168,17 @@ export default function Dashboard() {
     update('crops', profile.crops.filter((c) => c.id !== id));
   };
 
+  const saveProfile = useProfileStore((s) => s.saveProfile);
+
   const handleSave = () => {
     if (!profile.phone && !user?.phone_number) {
       toast.error('Please enter your phone number.');
       return;
     }
-    // TODO: POST to /api/profile when endpoint is ready
+    // Persist to global store (used by Irrigation, CatchUp, etc.)
+    saveProfile(profile);
     setSaved(true);
-    toast.success('Profile saved successfully! 🌱');
+    toast.success('Profile saved! Irrigation will now use your crop data. 🌱');
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -242,6 +249,9 @@ export default function Dashboard() {
             </Link>
           ))}
         </div>
+
+        {/* ── Catch Up Widget ────────────────────────────────────────────── */}
+        <CatchUpWidget />
 
         {/* ─────────────────────────────────────────────────────────────── */}
         {/* SECTION 1 — Basic Farmer Details                               */}

@@ -41,6 +41,12 @@ app.include_router(crop.router, prefix="/api")
 app.include_router(scheme.router, prefix="/api")
 app.include_router(weather.router, prefix="/api")
 app.include_router(disease.router, prefix="/api")
+
+try:
+    from .routers import catchup
+    app.include_router(catchup.router, prefix="/api")
+except ImportError:
+    pass
 if HAS_EXTRA_ROUTERS:
     app.include_router(chatbot.router, prefix="/api")
     app.include_router(irrigation.router, prefix="/api")

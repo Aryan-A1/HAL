@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Leaf, Trash2, Sprout, Calendar, Tag } from "lucide-react";
+import { Plus, Leaf, Trash2, Sprout, Calendar, Tag, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import CropTimeline from "@/components/crop-irrigation/CropTimeline";
 import {
   Dialog,
   DialogContent,
@@ -13,18 +14,36 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import type { Crop } from "@/types/crop-irrigation";
+import type { ProfileCrop } from "@/store/useProfileStore";
 
 interface CropSectionProps {
   crops: Crop[];
   onAddCrop: (name: string, stage?: string, notes?: string) => void;
   onRemoveCrop: (id: string) => void;
+  profileCrops?: ProfileCrop[];
 }
 
-const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
+const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [] }: CropSectionProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [stage, setStage] = useState("");
   const [notes, setNotes] = useState("");
+
+  // Per-crop tracking state — keyed by crop ID
+  const [trackedMap, setTrackedMap] = useState<Record<string, boolean>>({});
+
+  // Returns true if tracked; defaults to true for newly added crops
+  const isTracked = (id: string) => trackedMap[id] !== false;
+
+  const toggleTracking = (id: string) => {
+    setTrackedMap((prev) => ({ ...prev, [id]: !isTracked(id) }));
+  };
+
+  // Quick-fill from profile crop chip
+  const prefill = (pc: ProfileCrop) => {
+    setName(pc.name);
+    setStage(pc.growthStage);
+  };
 
   const handleSubmit = () => {
     if (!name.trim()) return;
@@ -62,6 +81,35 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-5 pt-4">
+
+              {/* Profile crop quick-select */}
+              {profileCrops.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
+                    From Your Profile
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {profileCrops.map((pc) => (
+                      <button
+                        key={pc.id}
+                        type="button"
+                        onClick={() => prefill(pc)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                          name === pc.name
+                            ? 'bg-primary text-white border-primary'
+                            : 'bg-primary/5 text-primary border-primary/20 hover:bg-primary/10'
+                        }`}
+                      >
+                        {name === pc.name && <CheckCircle2 className="w-3 h-3" />}
+                        🌾 {pc.name}
+                        <span className="opacity-60 font-normal">· {pc.growthStage}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-dashed border-muted pt-3" />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                   Crop Species
@@ -127,7 +175,9 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
             Fields are Empty
           </h3>
           <p className="text-muted-foreground text-center max-w-sm mb-8 font-medium">
-            Register your crops to activate the HAL AI monitoring system.
+            {profileCrops.length > 0
+              ? `You have ${profileCrops.length} crop${profileCrops.length > 1 ? 's' : ''} in your profile. Click "Add New Crop" to import them.`
+              : 'Register your crops to activate the HAL AI monitoring system.'}
           </p>
           <Button onClick={() => setOpen(true)} className="gap-2 rounded-xl premium-gradient px-8 h-12">
             <Plus className="w-5 h-5" />
@@ -180,9 +230,27 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
                         <Calendar className="w-4 h-4 text-primary/40" />
                         <span className="text-xs font-bold text-muted-foreground">Registered {new Date(crop.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <div className="px-3 py-1 rounded-full bg-primary/5 text-primary text-[10px] font-black uppercase tracking-tighter">
-                        ACTIVE Monitoring
-                      </div>
+
+                      {/* Per-crop tracking toggle */}
+                      {isTracked(crop.id) ? (
+                        <button
+                          onClick={() => toggleTracking(crop.id)}
+                          title="Click to untrack"
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 hover:bg-red-50 group/track transition-all"
+                        >
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse group-hover/track:bg-red-500 transition-colors" />
+                          <span className="text-[10px] font-black uppercase tracking-tighter text-primary group-hover/track:text-red-500 transition-colors">
+                            TRACKED
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => toggleTracking(crop.id)}
+                          className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-dashed border-primary/30 text-primary/60 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+                        >
+                          <span className="text-[10px] font-black uppercase tracking-tighter">Track</span>
+                        </button>
+                      )}
                     </div>
                     
                     {crop.notes && (
@@ -190,6 +258,10 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop }: CropSectionProps) => {
                         "{crop.notes}"
                       </div>
                     )}
+
+                    {/* Per-crop independent timeline */}
+                    <CropTimeline crop={crop} />
+
                   </CardContent>
                 </Card>
               </motion.div>

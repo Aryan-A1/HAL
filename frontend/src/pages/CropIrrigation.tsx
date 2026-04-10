@@ -7,16 +7,23 @@ import Footer from "@/components/Footer";
 import CropSection from "@/components/crop-irrigation/CropSection";
 import WeatherCalendar from "@/components/crop-irrigation/WeatherCalendar";
 import InsightsBanner from "@/components/crop-irrigation/InsightsBanner";
-import type { Crop, DayWeather, WeatherCondition, AIInsights } from "@/types/crop-irrigation";
+import ProfileCropPanel from "@/components/crop-irrigation/ProfileCropPanel";
+import type { Crop, WeatherCondition, AIInsights } from "@/types/crop-irrigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { apiService } from "@/services/apiService";
+import { useProfileStore } from "@/store/useProfileStore";
 
 
 const CropIrrigation = () => {
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // ── Profile data (global store — set by Profile page) ──────────────────
+  const profileCrops   = useProfileStore((s) => s.crops);
+  const profileSoil    = useProfileStore((s) => s.soilType);
+  const profileSavedAt = useProfileStore((s) => s.savedAt);
 
   // 1. Fetch Location
   useEffect(() => {
@@ -93,10 +100,15 @@ const CropIrrigation = () => {
       const harvestDate = new Date(today);
       harvestDate.setDate(today.getDate() + 120); // Default 4 months
 
+      // Use profile soil type if available, otherwise fallback
+      const soilType = profileSoil
+        ? SOIL_LABELS[profileSoil] || profileSoil
+        : "Loamy";
+
       return apiService.post("/api/crops/", {
         crop_name: newCrop.name,
-        soil_type: "Loamy",
-        sowing_date: today.toISOString().split('T')[0],
+        soil_type: soilType,
+        sowing_date: newCrop.plantingDate || today.toISOString().split('T')[0],
         expected_harvesting_date: harvestDate.toISOString().split('T')[0],
         growth_stage: newCrop.stage || "Seedling",
         notes: newCrop.notes || ""
@@ -108,21 +120,11 @@ const CropIrrigation = () => {
     }
   });
 
-  const removeCropMutation = useMutation({
-    // Note: Backend might need a DELETE endpoint, checking if it exists...
-    // For now assuming we can at least refresh the UI
-    mutationFn: async (id: string) => {
-      // res = await fetch(`/api/crops/${id}`, { method: 'DELETE' });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["crops"] })
-  });
-
   const handleAddCrop = (name: string, stage?: string, notes?: string) => {
     addCropMutation.mutate({ name, stage, notes });
   };
 
   const handleRemoveCrop = (id: string) => {
-    // removeCropMutation.mutate(id);
     toast({ title: "Feature coming soon", description: "Crop deletion is being integrated with the secure vault." });
   };
 
@@ -166,6 +168,15 @@ const CropIrrigation = () => {
         </div>
       </section>
 
+      {/* ── Profile Crop Panel ───────────────────────────────────────────── */}
+      <div className="max-w-6xl mx-auto px-4 mb-2">
+        <ProfileCropPanel
+          profileCrops={profileCrops}
+          soilType={profileSoil}
+          savedAt={profileSavedAt}
+        />
+      </div>
+
       <div className="max-w-6xl mx-auto px-4 pb-24 space-y-16">
         <InsightsBanner 
           days={weatherData || []} 
@@ -187,7 +198,12 @@ const CropIrrigation = () => {
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
-            <CropSection crops={crops} onAddCrop={handleAddCrop} onRemoveCrop={handleRemoveCrop} />
+            <CropSection
+              crops={crops}
+              onAddCrop={handleAddCrop}
+              onRemoveCrop={handleRemoveCrop}
+              profileCrops={profileCrops}
+            />
           )}
         </div>
       </div>
