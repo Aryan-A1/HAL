@@ -1,5 +1,5 @@
 
-const getBaseUrl = () => {
+export const getBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_BASE_URL;
   if (envUrl) {
     // Remove trailing slash if present

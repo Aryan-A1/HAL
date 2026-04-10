@@ -2,6 +2,7 @@ import { Send, Mic, MicOff, Volume2, Square, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useChatStore } from "../../store/useChatStore";
 import { toast } from "sonner";
+import { getBaseUrl } from "../../services/apiService";
 
 export const ChatInput = () => {
   const [text, setText] = useState("");
@@ -123,7 +124,7 @@ export const ChatInput = () => {
         formData.append("message", messageText);
       }
 
-      const response = await fetch("http://localhost:8000/api/chat", {
+      const response = await fetch(`${getBaseUrl()}/api/chat`, {
         method: "POST",
         body: formData,
         signal: abortControllerRef.current.signal,
@@ -145,7 +146,7 @@ export const ChatInput = () => {
 
       // Handle voice output if speaker is on
       if (isSpeakerOn && data.voice) {
-        const audio = new Audio(`http://localhost:8000${data.voice}`);
+        const audio = new Audio(`${getBaseUrl()}${data.voice}`);
         audio.playbackRate = 1.15;
         currentAudioRef.current = audio;
         setIsPlaying(true);
