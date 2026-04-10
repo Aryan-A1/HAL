@@ -10,7 +10,7 @@ from typing import Optional
 import uvicorn
 
 # Routers and DB - these are core and must always be available
-from .routers import auth, crop, scheme, weather, disease
+from .routers import auth, crop, scheme, weather, disease, stores
 from .database import engine, Base
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,7 @@ app.include_router(crop.router, prefix="/api")
 app.include_router(scheme.router, prefix="/api")
 app.include_router(weather.router, prefix="/api")
 app.include_router(disease.router, prefix="/api")
+app.include_router(stores.router, prefix="/api")
 
 try:
     from .routers import catchup
