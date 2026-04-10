@@ -1,9 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Leaf, Trash2, Sprout, Calendar, Tag, CheckCircle2 } from "lucide-react";
+import { Plus, Leaf, Trash2, Sprout, Calendar, Tag, CheckCircle2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CropTimeline from "@/components/crop-irrigation/CropTimeline";
 import {
   Dialog,
@@ -13,20 +20,30 @@ import {
   DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
-import type { Crop } from "@/types/crop-irrigation";
+import type { Crop, DayWeather } from "@/types/crop-irrigation";
 import type { ProfileCrop } from "@/store/useProfileStore";
 
 interface CropSectionProps {
   crops: Crop[];
-  onAddCrop: (name: string, stage?: string, notes?: string) => void;
+  onAddCrop: (name: string, stage?: string, notes?: string, plantingDate?: string) => void;
   onRemoveCrop: (id: string) => void;
   profileCrops?: ProfileCrop[];
+  forecastDays?: DayWeather[];
 }
 
-const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [] }: CropSectionProps) => {
+const GROWTH_STAGES = ['Seedling', 'Vegetative', 'Flowering', 'Harvesting'];
+
+const CROP_SUGGESTIONS = [
+  'Wheat', 'Rice', 'Maize', 'Cotton', 'Sugarcane',
+  'Soybean', 'Potato', 'Tomato', 'Onion', 'Mustard',
+  'Groundnut', 'Sunflower', 'Chickpea', 'Lentil', 'Bajra',
+];
+
+const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [], forecastDays = [] }: CropSectionProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [stage, setStage] = useState("");
+  const [stage, setStage] = useState("Seedling");
+  const [plantingDate, setPlantingDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState("");
 
   // Per-crop tracking state — keyed by crop ID
@@ -43,13 +60,15 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [] }: Crop
   const prefill = (pc: ProfileCrop) => {
     setName(pc.name);
     setStage(pc.growthStage);
+    if (pc.plantingDate) setPlantingDate(pc.plantingDate);
   };
 
   const handleSubmit = () => {
     if (!name.trim()) return;
-    onAddCrop(name.trim(), stage.trim() || undefined, notes.trim() || undefined);
+    onAddCrop(name.trim(), stage, notes.trim() || undefined, plantingDate);
     setName("");
-    setStage("");
+    setStage("Seedling");
+    setPlantingDate(new Date().toISOString().split('T')[0]);
     setNotes("");
     setOpen(false);
   };
@@ -115,34 +134,46 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [] }: Crop
                   Crop Species
                 </label>
                 <Input
-                  placeholder="e.g. Basmati Rice, Durum Wheat"
+                  list="crop-suggestions-dialog"
+                  placeholder="e.g. Wheat"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
                 />
+                <datalist id="crop-suggestions-dialog">
+                  {CROP_SUGGESTIONS.map((s) => <option key={s} value={s} />)}
+                </datalist>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                     Growth Stage
                   </label>
-                  <Input
-                    placeholder="e.g. Seedling"
-                    value={stage}
-                    onChange={(e) => setStage(e.target.value)}
-                    className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
-                  />
+                  <Select value={stage} onValueChange={setStage}>
+                    <SelectTrigger className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors">
+                      <SelectValue placeholder="Select Stage" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-primary/10">
+                      {GROWTH_STAGES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
-                    Area (Bigha/Acre)
+                    Planting Date
                   </label>
                   <Input
-                    placeholder="e.g. 5"
+                    type="date"
+                    value={plantingDate}
+                    onChange={(e) => setPlantingDate(e.target.value)}
                     className="rounded-xl border-primary/10 h-12 bg-muted/30 focus:bg-white transition-colors"
                   />
                 </div>
               </div>
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest ml-1">
                   Notes / Observations
@@ -246,9 +277,9 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [] }: Crop
                       ) : (
                         <button
                           onClick={() => toggleTracking(crop.id)}
-                          className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-dashed border-primary/30 text-primary/60 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+                          className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter text-muted-foreground bg-muted hover:bg-primary hover:text-white transition-all"
                         >
-                          <span className="text-[10px] font-black uppercase tracking-tighter">Track</span>
+                          TRACK
                         </button>
                       )}
                     </div>
@@ -259,8 +290,19 @@ const CropSection = ({ crops, onAddCrop, onRemoveCrop, profileCrops = [] }: Crop
                       </div>
                     )}
 
-                    {/* Per-crop independent timeline */}
-                    <CropTimeline crop={crop} />
+                    {/* Timeline */}
+                    <AnimatePresence>
+                      {isTracked(crop.id) && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <CropTimeline crop={crop} forecastDays={forecastDays} />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                   </CardContent>
                 </Card>

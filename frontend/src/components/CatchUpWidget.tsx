@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
 import { useProfileStore } from '@/store/useProfileStore';
 import { motion } from 'framer-motion';
-import { MapPin, Sprout, AlertCircle, Droplets, CloudRain, Activity } from 'lucide-react';
+import { MapPin, Sprout, AlertCircle, Droplets, CloudRain, Activity, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { apiService } from '@/services/apiService';
 
 interface CatchUpSummary {
   summary: string;
@@ -9,59 +10,43 @@ interface CatchUpSummary {
 
 export const CatchUpWidget = () => {
   const profile = useProfileStore((s) => s);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
   const mainCrop = profile.crops?.[0];
   const locationStr = [profile.city, profile.state, profile.country].filter(Boolean).join(', ');
   const soilType = profile.soilType;
 
-  // Icons used: 🌾 📍 💧 🌦️ (represented via lucide-react and emojis)
+  const { data: summary, isLoading: loading } = useQuery({
+    queryKey: ['catchup-summary', mainCrop?.name, locationStr, soilType],
+    queryFn: async () => {
+      if (!mainCrop || !locationStr) return null;
 
-  useEffect(() => {
-    async function fetchInsights() {
-      if (!mainCrop || !locationStr) return;
-      setLoading(true);
-      
+      // 1. Fetch real module data (irrigation)
+      let lastIrrigation: string | null = null;
       try {
-        // 1. Fetch real module data (irrigation from crops)
-        let lastIrrigation: string | null = null;
-        let diseaseStatus: string | null = null; // No disease module in backend yet
-        
-        try {
-          const { apiService } = await import('@/services/apiService');
-          const myCrops = await apiService.get("/api/crops/");
-          if (Array.isArray(myCrops)) {
-            const dbCrop = myCrops.find((c: any) => c.crop_name.toLowerCase() === mainCrop.name.toLowerCase());
-            if (dbCrop && dbCrop.last_irrigation_date) {
-              lastIrrigation = new Date(dbCrop.last_irrigation_date).toLocaleDateString();
-            }
+        const myCrops = await apiService.get("/api/crops");
+        if (Array.isArray(myCrops)) {
+          const dbCrop = myCrops.find((c: any) => c.crop_name.toLowerCase() === mainCrop.name.toLowerCase());
+          if (dbCrop && dbCrop.last_irrigation_date) {
+            lastIrrigation = new Date(dbCrop.last_irrigation_date).toLocaleDateString();
           }
-        } catch (e) {
-          console.warn("Could not fetch backend crops. Continuing with profile data.");
         }
-
-        // 2. Build summary dynamically using actual data
-        const { apiService } = await import('@/services/apiService');
-        const data = await apiService.post("/api/catchup", {
-          crop: mainCrop.name,
-          location: locationStr,
-          soilType: soilType || undefined,
-          plantingDate: mainCrop.plantingDate || undefined,
-          lastIrrigation: lastIrrigation || undefined,
-          diseaseStatus: diseaseStatus || undefined
-        });
-        
-        setSummary(data.summary);
-      } catch (err) {
-        console.error(err);
-        setSummary(`Your ${mainCrop.name} crop in ${locationStr} is currently active. Soil type is ${soilType || 'standard'}. Fetching further data failed.`);
-      } finally {
-        setLoading(false);
+      } catch (e) {
+        console.warn("Could not fetch backend crops context.");
       }
-    }
-    fetchInsights();
-  }, [mainCrop?.name, mainCrop?.plantingDate, locationStr, soilType]);
+
+      // 2. Fetch Catch Up summary
+      const data = await apiService.post("/api/catchup", {
+        crop: mainCrop.name,
+        location: locationStr,
+        soilType: soilType || undefined,
+        plantingDate: mainCrop.plantingDate || undefined,
+        lastIrrigation: lastIrrigation || undefined
+      });
+
+      return data.summary;
+    },
+    enabled: !!mainCrop && !!locationStr,
+    staleTime: 1000 * 60 * 15, // 15 minutes fresh
+  });
 
   if (!mainCrop || !locationStr) {
     return (

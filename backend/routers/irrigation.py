@@ -19,9 +19,9 @@ class ForecastRequest(BaseModel):
     soil_type: str
     sowing_date: str
     region: str
-    water_source: str
-    field_area_hectare: float
-    mulching_used: str
+    water_source: str = "Canal"
+    field_area_hectare: float = 1.0
+    mulching_used: str = "No"
 
 @router.post("/forecast")
 def get_irrigation_forecast(

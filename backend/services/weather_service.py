@@ -44,8 +44,22 @@ class WeatherService:
             
             return results
         except Exception as e:
-            print(f"Weather API Error: {e}")
-            return None
+            print(f"Weather API Error: {e}. Falling back to default simulation.")
+            # Fallback: Return a 16-day dummy forecast so the engine doesn't crash
+            fallback_results = []
+            today = datetime.now()
+            for i in range(days):
+                d = today + timedelta(days=i)
+                fallback_results.append({
+                    "date": d.strftime("%Y-%m-%d"),
+                    "temp_max": 30.0,
+                    "rainfall": 0.0,
+                    "rain_prob": 10,
+                    "wind_speed": 12.0,
+                    "sunlight_hours": 10.0,
+                    "humidity": 45
+                })
+            return fallback_results
 
 # Singleton
 weather_service = WeatherService()

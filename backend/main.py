@@ -80,24 +80,5 @@ async def global_exception_handler(request: Request, exc: Exception):
 def read_root():
     return {"status": "online", "message": "HAL Master Backend is ready."}
 
-@app.post("/api/irrigation/forecast")
-def get_irrigation_forecast(request: dict):
-    try:
-        # Lazy import — only fails if called, not on startup
-        from .services.irrigation.forecast_engine import get_forecast_engine
-        forecast_engine = get_forecast_engine()
-        calendar = forecast_engine.get_30_day_forecast(request)
-        if not calendar:
-            raise HTTPException(status_code=500, detail="Weather integration failed.")
-        return {
-            "crop": request.get("crop_type"),
-            "module": "irrigation",
-            "calendar": calendar
-        }
-    except ImportError:
-        raise HTTPException(status_code=503, detail="Irrigation ML service not available. Please install ML dependencies.")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=False)

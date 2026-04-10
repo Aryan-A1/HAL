@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Droplets, MapPin, RefreshCw, Sparkles, Loader2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CropSection from "@/components/crop-irrigation/CropSection";
@@ -12,11 +12,27 @@ import type { Crop, WeatherCondition, AIInsights } from "@/types/crop-irrigation
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { apiService } from "@/services/apiService";
+import { irrigationApi } from "@/services/irrigationApi";
 import { useProfileStore } from "@/store/useProfileStore";
+
+// ─── Simple Geocoder Logic (as requested) ──────────────────────────────────
+const CITY_COORDINATES: Record<string, { lat: number; lon: number }> = {
+  "ludhiana": { lat: 30.90, lon: 75.85 },
+  "amritsar": { lat: 31.63, lon: 74.87 },
+  "jalandhar": { lat: 31.33, lon: 75.58 },
+  "patiala": { lat: 30.33, lon: 76.38 },
+  "bathinda": { lat: 30.21, lon: 74.94 },
+  "chandigarh": { lat: 30.73, lon: 76.77 },
+  "delhi": { lat: 28.61, lon: 77.21 },
+  "new delhi": { lat: 28.61, lon: 77.21 },
+};
+
+const getCoordinates = (city: string) => {
+  return CITY_COORDINATES[city.toLowerCase()] || CITY_COORDINATES["ludhiana"];
+};
 
 
 const CropIrrigation = () => {
-  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -24,32 +40,36 @@ const CropIrrigation = () => {
   const profileCrops   = useProfileStore((s) => s.crops);
   const profileSoil    = useProfileStore((s) => s.soilType);
   const profileSavedAt = useProfileStore((s) => s.savedAt);
+  const profileCity    = useProfileStore((s) => s.city);
+  const profileState   = useProfileStore((s) => s.state);
 
-  // 1. Fetch Location
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null);
+
+  // 1. Determine Location from Profile (Primary) or Geolocation (Secondary)
   useEffect(() => {
-    if ("geolocation" in navigator) {
+    if (profileCity || profileState) {
+      const coords = getCoordinates(profileCity || profileState);
+      setLocation(coords);
+      console.log(`Using Profile Location: ${profileCity}, ${profileState} ->`, coords);
+    } else if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude });
         },
         () => {
-          setLocation({ lat: 28.6139, lon: 77.209 }); // Default Delhi
-          toast({
-            title: "Location Access Denied",
-            description: "Using default location for New Delhi.",
-          });
+          setLocation(CITY_COORDINATES["ludhiana"]); // Default fallback as requested
         }
       );
     } else {
-      setLocation({ lat: 28.6139, lon: 77.209 });
+      setLocation(CITY_COORDINATES["ludhiana"]);
     }
-  }, [toast]);
+  }, [profileCity, profileState]);
 
   // 2. Fetch Crops from DB
   const { data: crops = [], isLoading: isCropsLoading } = useQuery<Crop[]>({
     queryKey: ["crops"],
     queryFn: async () => {
-      const data = await apiService.get("/api/crops/");
+      const data = await apiService.get("/api/crops");
       return data.map((c: any) => ({
         id: c.id.toString(),
         name: c.crop_name,
@@ -57,55 +77,72 @@ const CropIrrigation = () => {
         notes: c.notes,
         createdAt: new Date(c.created_at)
       }));
-    }
-  });
-
-  // 3. Fetch Weather
-  const { data: weatherData, isLoading: isWeatherLoading, refetch: refetchWeather } = useQuery({
-    queryKey: ["weather", location],
-    queryFn: async () => {
-      if (!location) return [];
-      const raw = await apiService.get(`/api/weather/forecast?lat=${location.lat}&lon=${location.lon}&days=16`);
-      
-      return raw.map((d: any) => ({
-        date: new Date(d.date),
-        condition: (d.rain_prob > 60 ? "rainy" : d.temp_max > 30 ? "sunny" : d.wind_speed > 20 ? "windy" : "cloudy") as WeatherCondition,
-        temperature: Math.round(d.temp_max),
-        rainfall: d.rainfall,
-        rain_prob: d.rain_prob,
-        wind_speed: d.wind_speed,
-        irrigationNeeded: d.rain_prob < 30 && d.temp_max > 25,
-        recommendation: d.rain_prob > 60 ? "No watering needed" : d.temp_max > 30 ? "Water today" : "Monitor moisture"
-      }));
     },
-    enabled: !!location,
+    staleTime: 1000 * 60 * 5, // 5 minutes fresh
+    placeholderData: keepPreviousData,
   });
 
-  // 4. Fetch AI Insights
-  const { data: aiInsights, isLoading: isAIWaiting } = useQuery<AIInsights>({
-    queryKey: ["ai-insights", weatherData, crops.length],
+  // 3. Fetch Smart Irrigation Forecast (The Core AI Integration)
+  const mainProfileCrop = profileCrops?.[0];
+  const { data: forecastData, isLoading: isForecastLoading, refetch: refetchForecast } = useQuery({
+    queryKey: ["irrigation-forecast", location, mainProfileCrop?.name],
     queryFn: async () => {
-      return apiService.post("/api/weather/insights/weekly", { 
-        weather_data: weatherData, 
-        crops_count: crops.length 
+      if (!location) return null;
+      
+      return irrigationApi.getForecast({
+        lat: location.lat,
+        lon: location.lon,
+        crop_type: mainProfileCrop?.name || "Wheat", // Fallback to wheat
+        soil_type: profileSoil || "loamy",
+        sowing_date: mainProfileCrop?.plantingDate || new Date().toISOString().split('T')[0],
+        region: profileState || "North",
       });
     },
-    enabled: !!weatherData && weatherData.length > 0,
+    enabled: !!location,
+    staleTime: 1000 * 60 * 30, // 30 minutes fresh for irrigation
+    gcTime: 1000 * 60 * 60, // Keep in garbage collector for 1 hour
+    placeholderData: keepPreviousData,
   });
+
+  // Map forecastData to WeatherCalendar expectations
+  const weatherData = forecastData?.calendar?.map((d: any) => ({
+    date: new Date(d.date),
+    condition: (d.weather.rain_prob > 60 ? "rainy" : d.weather.temp_max > 30 ? "sunny" : d.weather.wind_speed > 20 ? "windy" : "cloudy") as WeatherCondition,
+    temperature: Math.round(d.weather.temp_max),
+    rainfall: d.weather.rainfall,
+    rain_prob: d.weather.rain_prob,
+    wind_speed: d.weather.wind_speed,
+    irrigationNeeded: d.recommendation.irrigate,
+    recommendation: d.recommendation.reason,
+    // Add extra details
+    simulated_moisture: d.simulated_moisture,
+    gross_amount_mm: d.recommendation.gross_amount_mm,
+    confidence_level: d.confidence.level,
+    confidence_reason: d.confidence.reason
+  })) || [];
+
+  // 4. Derive AI Insights Summary from Forecast
+  const aiInsights: AIInsights | undefined = forecastData ? {
+    irrigation_days: forecastData.calendar.filter(d => d.recommendation.irrigate).length,
+    rain_expected: forecastData.calendar.filter(d => d.weather.rainfall > 5).length,
+    storm_alerted: forecastData.calendar.filter(d => d.weather.wind_speed > 40).length,
+    summary: forecastData.calendar.find(d => d.recommendation.irrigate)?.recommendation.reason || "Soil moisture levels are currently optimal across the forecast period.",
+    upcoming_date: forecastData.upcoming_date
+  } : undefined;
 
   // Mutations
   const addCropMutation = useMutation({
     mutationFn: async (newCrop: any) => {
       const today = new Date();
-      const harvestDate = new Date(today);
-      harvestDate.setDate(today.getDate() + 120); // Default 4 months
+      const harvestDate = new Date(newCrop.plantingDate || today);
+      harvestDate.setDate(harvestDate.getDate() + 120); // Default 4 months
 
       // Use profile soil type if available, otherwise fallback
       const soilType = profileSoil
         ? SOIL_LABELS[profileSoil] || profileSoil
         : "Loamy";
 
-      return apiService.post("/api/crops/", {
+      return apiService.post("/api/crops", {
         crop_name: newCrop.name,
         soil_type: soilType,
         sowing_date: newCrop.plantingDate || today.toISOString().split('T')[0],
@@ -120,8 +157,8 @@ const CropIrrigation = () => {
     }
   });
 
-  const handleAddCrop = (name: string, stage?: string, notes?: string) => {
-    addCropMutation.mutate({ name, stage, notes });
+  const handleAddCrop = (name: string, stage?: string, notes?: string, plantingDate?: string) => {
+    addCropMutation.mutate({ name, stage, notes, plantingDate });
   };
 
   const handleRemoveCrop = (id: string) => {
@@ -158,10 +195,10 @@ const CropIrrigation = () => {
             <div className="flex items-center gap-3">
               <div className="glass px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium text-foreground/80 border-primary/10">
                 <MapPin className="w-4 h-4 text-primary" />
-                {location ? "Station Active" : "Locating..."}
+                {profileCity ? `${profileCity}, ${profileState}` : location ? "Ludhiana, Punjab" : "Locating..."}
               </div>
-              <Button variant="outline" size="icon" onClick={() => refetchWeather()} className="rounded-xl border-primary/10">
-                <RefreshCw className={`w-4 h-4 ${isWeatherLoading ? "animate-spin" : ""}`} />
+              <Button variant="outline" size="icon" onClick={() => refetchForecast()} className="rounded-xl border-primary/10">
+                <RefreshCw className={`w-4 h-4 ${isForecastLoading ? "animate-spin" : ""}`} />
               </Button>
             </div>
           </div>
@@ -174,6 +211,7 @@ const CropIrrigation = () => {
           profileCrops={profileCrops}
           soilType={profileSoil}
           savedAt={profileSavedAt}
+          trackedCropsCount={crops.length}
         />
       </div>
 
@@ -182,13 +220,13 @@ const CropIrrigation = () => {
           days={weatherData || []} 
           cropCount={crops.length} 
           aiInsights={aiInsights}
-          loading={isAIWaiting || isWeatherLoading}
+          loading={isForecastLoading}
         />
 
         <div className="relative">
           <div className="absolute inset-0 bg-primary/5 rounded-[2rem] -rotate-1 pointer-events-none" />
           <div className="relative glass p-8 rounded-[2rem] border-primary/10">
-            <WeatherCalendar days={weatherData || []} loading={isWeatherLoading} />
+            <WeatherCalendar days={weatherData || []} loading={isForecastLoading} />
           </div>
         </div>
 
@@ -203,6 +241,7 @@ const CropIrrigation = () => {
               onAddCrop={handleAddCrop}
               onRemoveCrop={handleRemoveCrop}
               profileCrops={profileCrops}
+              forecastDays={weatherData}
             />
           )}
         </div>

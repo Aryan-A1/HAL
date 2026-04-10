@@ -17,6 +17,11 @@ export interface DayWeather {
   rainfall?: number;
   rain_prob?: number;
   wind_speed?: number;
+  // AI/ML specific fields
+  simulated_moisture?: number;
+  gross_amount_mm?: number;
+  confidence_level?: string;
+  confidence_reason?: string;
 }
 
 export interface AIInsights {
@@ -24,4 +29,5 @@ export interface AIInsights {
   rain_expected: number;
   storm_alerted: number;
   summary: string;
+  upcoming_date?: string | null;
 }

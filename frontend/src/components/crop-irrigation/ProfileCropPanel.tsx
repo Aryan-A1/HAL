@@ -30,6 +30,7 @@ interface ProfileCropPanelProps {
   profileCrops: ProfileCrop[];
   soilType: string;
   savedAt: string | null;
+  trackedCropsCount?: number;
 }
 
 // ─── Compact crop chip ────────────────────────────────────────────────────────
@@ -76,12 +77,13 @@ const CropChip = ({ crop, delay }: { crop: ProfileCrop; delay: number }) => {
 };
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
-const ProfileCropPanel = ({ profileCrops, soilType, savedAt }: ProfileCropPanelProps) => {
+const ProfileCropPanel = ({ profileCrops, soilType, savedAt, trackedCropsCount }: ProfileCropPanelProps) => {
   const hasCrops = profileCrops.length > 0;
   const hasSoil  = !!soilType;
 
   // ── No profile at all ──────────────────────────────────────────────────────
   if (!hasCrops && !hasSoil) {
+    if (trackedCropsCount && trackedCropsCount > 0) return null;
     return (
       <motion.div
         initial={{ opacity: 0, y: -8 }}

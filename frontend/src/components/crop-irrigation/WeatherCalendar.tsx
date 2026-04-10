@@ -10,9 +10,17 @@ import {
   ChevronLeft,
   ChevronRight,
   TrendingUp,
+  Info,
+  Thermometer,
+  Waves
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import type { DayWeather } from "@/types/crop-irrigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";import type { DayWeather } from "@/types/crop-irrigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface WeatherCalendarProps {
@@ -82,7 +90,7 @@ const WeatherCalendar = ({ days, loading }: WeatherCalendarProps) => {
             <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Live Outlook</span>
           </div>
           <h2 className="text-3xl font-heading font-black text-foreground tracking-tight">
-            10-Day Forecast
+            30-Day Forecast
           </h2>
         </div>
         <div className="flex gap-2">
@@ -145,8 +153,18 @@ const WeatherCalendar = ({ days, loading }: WeatherCalendarProps) => {
                       </div>
                     </div>
 
-                    <div className={`w-12 h-12 rounded-full mx-auto ${config.bgClass} flex items-center justify-center transition-transform hover:rotate-12`}>
-                      <Icon className={`w-6 h-6 ${config.iconClass}`} />
+                    <div className="relative">
+                      <div className={`w-12 h-12 rounded-full mx-auto ${config.bgClass} flex items-center justify-center transition-transform hover:rotate-12`}>
+                        <Icon className={`w-6 h-6 ${config.iconClass}`} />
+                      </div>
+                      {day.simulated_moisture !== undefined && (
+                        <div className="absolute -bottom-1 -right-1 bg-white border border-gray-100 rounded-lg px-1.5 py-0.5 shadow-sm scale-90">
+                           <div className="flex items-center gap-1">
+                             <Droplets className="w-2 h-2 text-blue-500" />
+                             <span className="text-[9px] font-black text-gray-700">{Math.round(day.simulated_moisture)}%</span>
+                           </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-1">
@@ -160,21 +178,42 @@ const WeatherCalendar = ({ days, loading }: WeatherCalendarProps) => {
                     </div>
                   </div>
 
-                  <div className={`px-3 py-3 text-[10px] font-bold text-center border-t border-dashed ${day.irrigationNeeded ? "bg-blue-50/50 text-blue-700" : "bg-muted/30 text-muted-foreground"}`}>
-                    <div className="flex flex-col items-center gap-1">
-                      {day.irrigationNeeded ? (
-                        <>
-                          <Droplets className="w-3 h-3 animate-bounce" />
-                          <span>IRRIGATE</span>
-                        </>
-                      ) : (
-                        <>
-                          <TrendingUp className="w-3 h-3 text-emerald-500" />
-                          <span>OPTIMAL</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className={`px-3 py-3 text-[10px] font-bold text-center border-t border-dashed cursor-help transition-colors ${day.irrigationNeeded ? "bg-blue-500 text-white" : "bg-muted/30 text-muted-foreground"}`}>
+                          <div className="flex flex-col items-center gap-1">
+                            {day.irrigationNeeded ? (
+                              <>
+                                <Waves className="w-3 h-3 animate-pulse" />
+                                <span className="uppercase">+{day.gross_amount_mm}mm</span>
+                              </>
+                            ) : (
+                              <>
+                                <TrendingUp className="w-3 h-3 text-emerald-500" />
+                                <span>OPTIMAL</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-[200px] p-3 rounded-xl border-primary/20">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
+                             <div className={`w-1.5 h-1.5 rounded-full ${day.confidence_level === 'High' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                             <span className="text-[10px] font-black uppercase tracking-wider">{day.confidence_level} Confidence</span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed font-medium">{day.recommendation || "System suggests standard monitoring."}</p>
+                          {day.irrigationNeeded && (
+                            <div className="pt-1 flex items-center gap-2 text-[10px] text-primary font-bold italic">
+                               <Thermometer className="w-3 h-3" />
+                               AI Predicted Stress
+                            </div>
+                          )}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </CardContent>
               </Card>
             </motion.div>

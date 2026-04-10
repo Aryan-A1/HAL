@@ -16,6 +16,10 @@ class ForecastEngine:
         self.base_dir = str(base_path)
         self.data_dir = str(base_path / "data" / "irrigation_prediction" / "configs")
         self.ml_service = get_ml_service()
+        
+        # Simple In-Memory Cache (TTL: 1 Hour)
+        self._cache = {}
+        self._cache_expiry = 3600 # seconds
 
     def _load_json(self, filename):
         path = os.path.join(self.data_dir, filename)
@@ -25,6 +29,14 @@ class ForecastEngine:
         return {}
 
     def get_30_day_forecast(self, farmer_input: dict):
+        # 0. Cache Check
+        cache_key = f"{farmer_input['lat']}_{farmer_input['lon']}_{farmer_input['crop_type']}_{farmer_input['soil_type']}_{farmer_input['sowing_date']}_{datetime.now().strftime('%Y-%m-%d')}"
+        if cache_key in self._cache:
+            data, timestamp = self._cache[cache_key]
+            if (datetime.now() - timestamp).total_seconds() < self._cache_expiry:
+                print(f"CACHE HIT: Returning cached irrigation plan for {farmer_input['crop_type']}")
+                return data
+
         weather_forecast = weather_service.get_forecast(farmer_input["lat"], farmer_input["lon"])
         if not weather_forecast: return None
             
@@ -170,6 +182,7 @@ class ForecastEngine:
                 "efficiency_info": f"{int(efficiency*100)}% ({irrigation_type})"
             })
             
+        self._cache[cache_key] = (calendar, datetime.now())
         return calendar
 
     def _generate_reason(self, w, moisture, wp, stage, crop):

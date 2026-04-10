@@ -57,9 +57,22 @@ const InsightsBanner = ({ days, cropCount, aiInsights, loading }: InsightsBanner
         <div className="flex items-center gap-2">
           <BrainCircuit className="w-6 h-6 text-primary" />
           <h2 className="text-2xl font-heading font-black text-foreground">
-            Weekly AI Insights
+            30-Day AI Outlook
           </h2>
         </div>
+        {!loading && aiInsights?.upcoming_date && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded-xl border border-blue-400 shadow-sm"
+          >
+            <Droplets className="w-3.5 h-3.5" />
+            <div className="flex flex-col">
+              <span className="text-[8px] font-black uppercase leading-none opacity-80">Next Watering</span>
+              <span className="text-xs font-black">{new Date(aiInsights.upcoming_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -116,7 +129,7 @@ const InsightsBanner = ({ days, cropCount, aiInsights, loading }: InsightsBanner
                 <span className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">Live Analysis</span>
               </div>
               <div className="h-1 w-1 rounded-full bg-primary/30" />
-              <span className="text-[10px] text-muted-foreground font-bold uppercase">Next 7 Days</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase">Next 30 Days</span>
             </div>
             {loading ? (
               <div className="space-y-2">

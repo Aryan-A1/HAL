@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronUp, CalendarDays } from "lucide-react";
-import type { Crop } from "@/types/crop-irrigation";
+import type { Crop, DayWeather } from "@/types/crop-irrigation";
 
 // ─── Event types ───────────────────────────────────────────────────────────────
 
@@ -25,7 +25,7 @@ const EVENT_CONFIG: Record<EventType, { emoji: string; pillClass: string; dotCla
 
 // ─── Schedule generator ────────────────────────────────────────────────────────
 
-function generateSchedule(crop: Crop): ScheduleEvent[] {
+function generateSchedule(crop: Crop, forecastDays?: DayWeather[]): ScheduleEvent[] {
   const start = new Date(crop.createdAt);
   const now   = new Date();
 
@@ -42,22 +42,43 @@ function generateSchedule(crop: Crop): ScheduleEvent[] {
     done: add(offset) <= now,
   });
 
+  const evDate = (date: Date, label: string, type: EventType): ScheduleEvent => ({
+    date,
+    label,
+    type,
+    done: date < now,
+  });
+
   const stageDays: Record<string, number> = {
     Seedling: 90, Vegetative: 60, Flowering: 30, Harvesting: 7,
   };
 
-  return [
+  const baseEvents = [
     ev(0,  "Planted",            "planted"),
-    ev(3,  "First Irrigation",   "irrigation"),
     ev(7,  "Inspection",         "inspection"),
     ev(10, "Fertilizer Applied", "fertilizer"),
-    ev(14, "Second Irrigation",  "irrigation"),
     ev(18, "Pest Control",       "pesticide"),
     ev(21, "Inspection",         "inspection"),
-    ev(25, "Irrigation",         "irrigation"),
     ev(28, "Fertilizer Top-up",  "fertilizer"),
     ev(stageDays[crop.stage || "Seedling"] ?? 90, "Expected Harvest", "harvest"),
-  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  ];
+
+  let irrigationEvents: ScheduleEvent[] = [];
+  
+  if (forecastDays && forecastDays.length > 0) {
+    irrigationEvents = forecastDays
+      .filter((d) => d.irrigationNeeded)
+      .map((d) => evDate(new Date(d.date), `Irrigate (+${d.gross_amount_mm}mm)`, "irrigation"));
+  } else {
+    // Fallback static schedule if forecast isn't ready
+    irrigationEvents = [
+      ev(3,  "First Irrigation",   "irrigation"),
+      ev(14, "Second Irrigation",  "irrigation"),
+      ev(25, "Irrigation",         "irrigation"),
+    ];
+  }
+
+  return [...baseEvents, ...irrigationEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 const fmt = (d: Date) =>
@@ -67,9 +88,9 @@ const fmt = (d: Date) =>
 
 const ALWAYS_VISIBLE = 3; // always show first 3 events
 
-const CropTimeline = ({ crop }: { crop: Crop }) => {
+const CropTimeline = ({ crop, forecastDays }: { crop: Crop; forecastDays?: DayWeather[] }) => {
   const [showAll, setShowAll] = useState(false);
-  const schedule  = generateSchedule(crop);
+  const schedule  = generateSchedule(crop, forecastDays);
   const doneCount = schedule.filter((e) => e.done).length;
   const nextEvent = schedule.find((e) => !e.done);
   const progress  = Math.round((doneCount / schedule.length) * 100);
@@ -147,17 +168,19 @@ const CropTimeline = ({ crop }: { crop: Crop }) => {
                 {ev.label}
               </span>
 
-              {/* Date */}
-              <span className={`tabular-nums font-medium ${ev.done ? "text-gray-400" : "text-gray-500"}`}>
-                {fmt(ev.date)}
-              </span>
-
-              {/* Status chip */}
-              {ev.done ? (
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">✓</span>
-              ) : isNext ? (
-                <span className="text-[9px] font-black text-primary uppercase tracking-wider animate-pulse">Next</span>
-              ) : null}
+              {/* Date & Status Chip Container */}
+              <div className="flex items-center justify-end w-[85px] gap-2">
+                <span className={`tabular-nums font-medium whitespace-nowrap ${ev.done ? "text-gray-400" : "text-gray-500"}`}>
+                  {fmt(ev.date)}
+                </span>
+                <div className="w-8 flex justify-end flex-shrink-0">
+                  {ev.done ? (
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider">✓</span>
+                  ) : isNext ? (
+                    <span className="text-[9px] font-black text-primary uppercase tracking-wider animate-pulse">Next</span>
+                  ) : null}
+                </div>
+              </div>
             </motion.div>
           );
         })}

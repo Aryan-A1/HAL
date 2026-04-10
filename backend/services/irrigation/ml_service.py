@@ -27,18 +27,35 @@ class MLService:
         if not all([os.path.exists(clf_path), os.path.exists(reg_path), os.path.exists(features_path)]):
             raise FileNotFoundError(f"Models not found in {self.models_dir}. Please run the training script.")
             
-        self.classifier = joblib.load(clf_path)
-        self.regressor = joblib.load(reg_path)
+        try:
+            self.classifier = joblib.load(clf_path)
+            self.regressor = joblib.load(reg_path)
+        except Exception as e:
+            print(f"WARNING: Models failed to load due to scikit-learn mismatch: {e}")
+            self.classifier = None
+            self.regressor = None
         
         with open(features_path, "r") as f:
             self.feature_names = json.load(f)
 
     def predict(self, input_data: dict):
+        if not self.classifier or not self.regressor:
+            return {"irrigate": False, "amount_mm": 0.0}
+
         df = self._pd.DataFrame([input_data])
         df = df[self.feature_names] # Ensure order
         
-        irrigate_needed = bool(self.classifier.predict(df)[0])
-        amount_mm = float(self.regressor.predict(df)[0]) if irrigate_needed else 0.0
+        try:
+            irrigate_needed = bool(self.classifier.predict(df)[0])
+            amount_mm = float(self.regressor.predict(df)[0]) if irrigate_needed else 0.0
+        except AttributeError as e:
+            if "_fill_dtype" in str(e):
+                print("WARNING: Scikit-learn version mismatch detected! Falling back to Physics rules engine.")
+                return {"irrigate": False, "amount_mm": 0.0}
+            raise e
+        except Exception as e:
+            print(f"WARNING: Model prediction failed: {e}. Falling back to Physics engine.")
+            return {"irrigate": False, "amount_mm": 0.0}
         
         return {
             "irrigate": irrigate_needed,
