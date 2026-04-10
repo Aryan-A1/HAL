@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getBaseUrl } from "@/services/apiService";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface Scheme {
   id: number;
@@ -26,6 +27,7 @@ const Schemes = () => {
   const [schemes, setSchemes] = useState<Scheme[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const { t } = useTranslation();
 
   const fetchSchemes = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -82,10 +84,10 @@ const Schemes = () => {
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-                Government Schemes
+                {t.schemes.title}
               </h1>
               <p className="text-muted-foreground">
-                Find the right financial and technical support for your farm
+                {t.schemes.subtitle}
               </p>
             </div>
           </motion.div>
@@ -98,7 +100,7 @@ const Schemes = () => {
           <div className="bg-card border border-primary/10 rounded-2xl p-6 md:p-8 shadow-sm">
             <form onSubmit={fetchSchemes} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
               <div className="space-y-2">
-                <Label htmlFor="crop">Crop Type</Label>
+                <Label htmlFor="crop">{t.schemes.filterByCrop}</Label>
                 <Input
                   id="crop"
                   placeholder="e.g. Wheat, Rice, All"
@@ -108,7 +110,7 @@ const Schemes = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="state">State / Region</Label>
+                <Label htmlFor="state">{t.schemes.filterByState}</Label>
                 <Input
                   id="state"
                   placeholder="e.g. Punjab, All"
@@ -121,12 +123,12 @@ const Schemes = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Searching...
+                    {t.schemes.searching}
                   </>
                 ) : (
                   <>
                     <Search className="mr-2 h-4 w-4" />
-                    Get Schemes
+                    {t.schemes.getSchemes}
                   </>
                 )}
               </Button>
@@ -163,9 +165,9 @@ const Schemes = () => {
         ) : hasSearched ? (
           <div className="flex flex-col items-center justify-center py-20 bg-card rounded-2xl border border-dashed border-primary/20">
             <Search className="w-12 h-12 text-muted-foreground mb-4 opacity-20" />
-            <h3 className="text-xl font-medium text-foreground mb-2">No schemes found</h3>
+            <h3 className="text-xl font-medium text-foreground mb-2">{t.schemes.noSchemes}</h3>
             <p className="text-muted-foreground text-center max-w-md">
-              Try searching with different keywords or check back later for new government updates.
+              {t.schemes.noSchemesDesc}
             </p>
           </div>
         ) : null}

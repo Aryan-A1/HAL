@@ -12,6 +12,7 @@ import type { Crop, WeatherCondition, AIInsights } from "@/types/crop-irrigation
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { apiService } from "@/services/apiService";
+import { useTranslation } from "@/hooks/useTranslation";
 import { useProfileStore } from "@/store/useProfileStore";
 
 
@@ -24,6 +25,7 @@ const CropIrrigation = () => {
   const profileCrops   = useProfileStore((s) => s.crops);
   const profileSoil    = useProfileStore((s) => s.soilType);
   const profileSavedAt = useProfileStore((s) => s.savedAt);
+  const { t } = useTranslation();
 
   // 1. Fetch Location
   useEffect(() => {
@@ -146,10 +148,10 @@ const CropIrrigation = () => {
                 </div>
                 <div>
                   <h1 className="text-4xl md:text-5xl font-heading font-black text-foreground tracking-tight">
-                    Crop Irrigation
+                    {t.irrigation.title}
                   </h1>
                   <p className="text-muted-foreground text-lg max-w-md">
-                    Precision watering guided by real-time weather & HAL AI.
+                    {t.irrigation.subtitle}
                   </p>
                 </div>
               </div>
@@ -158,7 +160,7 @@ const CropIrrigation = () => {
             <div className="flex items-center gap-3">
               <div className="glass px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium text-foreground/80 border-primary/10">
                 <MapPin className="w-4 h-4 text-primary" />
-                {location ? "Station Active" : "Locating..."}
+                {location ? t.irrigation.stationActive : t.irrigation.locating}
               </div>
               <Button variant="outline" size="icon" onClick={() => refetchWeather()} className="rounded-xl border-primary/10">
                 <RefreshCw className={`w-4 h-4 ${isWeatherLoading ? "animate-spin" : ""}`} />

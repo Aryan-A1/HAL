@@ -106,6 +106,8 @@ const NotificationCard = ({ notification, onRead }: NotificationCardProps) => {
 };
 
 
+import { useTranslation } from "@/hooks/useTranslation";
+
 // --- Main panel ---
 interface NotificationPanelProps {
   isOpen: boolean;
@@ -116,6 +118,7 @@ const NotificationPanel = ({ isOpen, onClose }: NotificationPanelProps) => {
   const { notifications, markAsRead, markAllAsRead, clearAll, unreadCount } = useNotificationStore();
   const panelRef = useRef<HTMLDivElement>(null);
   const count = unreadCount();
+  const { t } = useTranslation();
 
   // Close on outside click
   useEffect(() => {
@@ -143,7 +146,7 @@ const NotificationPanel = ({ isOpen, onClose }: NotificationPanelProps) => {
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-primary/5 to-transparent">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-black text-gray-800">Smart Alerts</h3>
+              <h3 className="text-sm font-black text-gray-800">{t.notifications.title}</h3>
               {count > 0 && (
                 <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
                   {count} new

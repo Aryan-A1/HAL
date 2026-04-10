@@ -1,0 +1,45 @@
+{
+  "navbar": {
+    "home": "Home",
+    "schemes": "Govt Schemes",
+    "cropDisease": "Crop Disease",
+    "cropIrrigation": "Crop Irrigation",
+    "catchUp": "Catch Up on Crops",
+    "login": "Login",
+    "signUp": "Sign Up",
+    "profile": "Profile",
+    "logout": "Logout",
+    "notifications": "Notifications"
+  },
+  "chatbot": {
+    "title": "Kisan AI Assistant",
+    "placeholder": "Ask anything about farming...",
+    "send": "Send",
+    "listening": "Listening...",
+    "typing": "Kisan AI is typing..."
+  },
+  "schemes": {
+    "title": "Government Schemes",
+    "subtitle": "Discover agricultural schemes for your state.",
+    "searchPlaceholder": "Search schemes...",
+    "filterByCrop": "Crop Type",
+    "filterByState": "State / Region",
+    "getSchemes": "Get Schemes",
+    "searching": "Searching...",
+    "noSchemes": "No schemes found",
+    "noSchemesDesc": "Try searching with different keywords."
+  },
+  "irrigation": {
+    "title": "Crop Irrigation",
+    "subtitle": "Precision watering guided by real-time weather & HAL AI.",
+    "stationActive": "Station Active",
+    "locating": "Locating..."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noUnread": "No unread notifications",
+    "noNotifications": "No notifications yet",
+    "viewAll": "View all notifications"
+  }
+}
