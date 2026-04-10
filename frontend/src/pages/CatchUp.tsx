@@ -25,6 +25,18 @@ export default function CatchUpPage() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const hasCrops = serverCrops.length > 0 || (profile.crops && profile.crops.length > 0);
+  
+  // Find the first crop to show in the CatchUpWidget
+  const firstServerCrop = serverCrops[0] ? { 
+    name: serverCrops[0].crop_name, 
+    plantingDate: serverCrops[0].sowing_date,
+    soil: serverCrops[0].soil_type
+  } : null;
+  
+  const displayCrop = firstServerCrop || profile.crops?.[0];
+  const displayLocation = [profile.city, profile.state].filter(Boolean).join(", ");
+
   return (
     <div className="min-h-screen bg-[#F0F7F0]">
       <Navbar />
@@ -53,10 +65,20 @@ export default function CatchUpPage() {
           </button>
         </motion.div>
 
-        {/* ── Catch Up Feature ─────────────────────────────── */}
         <section>
-          {profile.crops && profile.crops.length > 0 ? (
-            <CatchUpWidget />
+          {isCropsLoading ? (
+             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 flex flex-col items-center justify-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#1B5E20]" />
+                </div>
+                <p className="text-sm font-black text-gray-400 uppercase tracking-widest">Checking your fields...</p>
+             </div>
+          ) : hasCrops ? (
+            <CatchUpWidget 
+              externalCrop={displayCrop}
+              externalLocation={displayLocation || undefined}
+              externalSoil={firstServerCrop?.soil || profile.soilType || undefined}
+            />
           ) : (
             <motion.div
               initial={{ opacity: 0 }}

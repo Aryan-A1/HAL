@@ -10,6 +10,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { getBaseUrl } from "@/services/apiService";
 import { useTranslation } from "@/hooks/useTranslation";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { INDIAN_STATES } from "@/constants/indianStates";
 
 interface Scheme {
   id: number;
@@ -111,13 +119,19 @@ const Schemes = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="state">{t.schemes.filterByState}</Label>
-                <Input
-                  id="state"
-                  placeholder="e.g. Punjab, All"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="bg-background"
-                />
+                <Select onValueChange={setState} value={state}>
+                  <SelectTrigger id="state" className="bg-background">
+                    <SelectValue placeholder="All States" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="All">All States</SelectItem>
+                    {INDIAN_STATES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <Button type="submit" size="lg" className="w-full" disabled={loading}>
                 {loading ? (

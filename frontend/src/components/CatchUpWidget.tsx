@@ -8,16 +8,22 @@ interface CatchUpSummary {
   summary: string;
 }
 
-export const CatchUpWidget = () => {
+export const CatchUpWidget = ({ externalCrop, externalLocation, externalSoil }: { 
+  externalCrop?: { name: string, plantingDate?: string },
+  externalLocation?: string,
+  externalSoil?: string
+}) => {
   const profile = useProfileStore((s) => s);
-  const mainCrop = profile.crops?.[0];
-  const locationStr = [profile.city, profile.state, profile.country].filter(Boolean).join(', ');
-  const soilType = profile.soilType;
+  
+  // Priority: Prop > Profile > Fallback
+  const mainCrop = externalCrop || profile.crops?.[0];
+  const locationStr = externalLocation || [profile.city, profile.state, profile.country].filter(Boolean).join(', ') || "Ludhiana, Punjab";
+  const soilType = externalSoil || profile.soilType;
 
   const { data: summary, isLoading: loading } = useQuery({
     queryKey: ['catchup-summary', mainCrop?.name, locationStr, soilType],
     queryFn: async () => {
-      if (!mainCrop || !locationStr) return null;
+      if (!mainCrop) return null;
 
       // 1. Fetch real module data (irrigation)
       let lastIrrigation: string | null = null;
@@ -44,7 +50,7 @@ export const CatchUpWidget = () => {
 
       return data.summary;
     },
-    enabled: !!mainCrop && !!locationStr,
+    enabled: !!mainCrop,
     staleTime: 1000 * 60 * 15, // 15 minutes fresh
   });
 

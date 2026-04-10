@@ -18,6 +18,14 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { INDIAN_STATES } from '@/constants/indianStates';
 
 const formSchema = z
   .object({
@@ -153,9 +161,20 @@ export function SignupForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>State (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Maharashtra" disabled={isLoading} {...field} />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {INDIAN_STATES.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

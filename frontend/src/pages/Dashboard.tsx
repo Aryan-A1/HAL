@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CatchUpWidget } from '@/components/CatchUpWidget';
+import { INDIAN_STATES } from '@/constants/indianStates';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -314,7 +315,12 @@ export default function Dashboard() {
             </div>
             <div>
               <FieldLabel>State</FieldLabel>
-              <FieldInput value={profile.state} onChange={(e) => update('state', e.target.value)} placeholder="Punjab" />
+              <FieldSelect value={profile.state} onChange={(v) => update('state', v)}>
+                <option value="">Select state</option>
+                {INDIAN_STATES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </FieldSelect>
             </div>
             <div>
               <FieldLabel>City / District</FieldLabel>
