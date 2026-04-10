@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Menu, X, Leaf, User as UserIcon, Bell } from "lucide-react";
+import { Menu, X, Leaf, User as UserIcon, Bell, Globe } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { authApi } from "@/services/authApi";
 import { Button } from "@/components/ui/button";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import NotificationPanel from "@/components/NotificationPanel";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
-const navItems = [
-  { label: "Home", href: "/#home" },
-  { label: "Govt Schemes", href: "/schemes" },
-  { label: "Crop Disease", href: "/crop-disease" },
-  { label: "Crop Irrigation", href: "/crop-irrigation" },
-  { label: "Catch Up on Crops", href: "/catch-up" },
+const getNavItems = (t: any) => [
+  { label: t.navbar.home, href: "/#home" },
+  { label: t.navbar.schemes, href: "/schemes" },
+  { label: t.navbar.cropDisease, href: "/crop-disease" },
+  { label: t.navbar.cropIrrigation, href: "/crop-irrigation" },
+  { label: t.navbar.catchUp, href: "/catch-up" },
 ];
 
 const Navbar = () => {
@@ -21,6 +23,14 @@ const Navbar = () => {
   const { isAuthenticated, logout } = useAuthStore();
   const unreadCount = useNotificationStore((s) => s.unreadCount());
   const navigate = useNavigate();
+  const { t, language } = useTranslation();
+  const setLanguage = useLanguageStore((s) => s.setLanguage);
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'hi' : 'en');
+  };
+
+  const navItems = getNavItems(t);
 
   const handleLogout = async () => {
     await authApi.logout();
@@ -54,18 +64,27 @@ const Navbar = () => {
 
         {/* Auth Actions & Mobile Toggle */}
         <div className="flex items-center gap-2">
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLanguage}
+            className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-primary-foreground hover:bg-primary-foreground/10 text-sm font-medium transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            {t.navbar.language}
+          </button>
+
           {/* Desktop Auth */}
-          <div className="hidden md:flex items-center gap-2 ml-4">
+          <div className="hidden md:flex items-center gap-2 ml-2">
             {!isAuthenticated ? (
               <>
                 <Link to="/login">
                   <Button variant="outline" size="sm" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
-                    Login
+                    {t.navbar.login}
                   </Button>
                 </Link>
                 <Link to="/signup">
                   <Button size="sm" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90">
-                    Sign Up
+                    {t.navbar.signUp}
                   </Button>
                 </Link>
               </>
@@ -91,11 +110,11 @@ const Navbar = () => {
                 <Link to="/dashboard">
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground">
                     <UserIcon className="w-4 h-4 mr-2" />
-                    Profile
+                    {t.navbar.profile}
                   </Button>
                 </Link>
                 <Button variant="outline" size="sm" className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" onClick={handleLogout}>
-                  Logout
+                  {t.navbar.logout}
                 </Button>
               </>
             )}
@@ -128,6 +147,23 @@ const Navbar = () => {
               </li>
             ))}
             
+            {/* Mobile Language Toggle */}
+            <li className="my-1">
+              <button
+                onClick={() => {
+                  toggleLanguage();
+                  setMobileOpen(false);
+                }}
+                className="w-full flex items-center justify-between text-primary-foreground hover:text-primary hover:bg-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  Language
+                </div>
+                <span className="font-bold">{t.navbar.language}</span>
+              </button>
+            </li>
+
             {/* Mobile Auth Links */}
             <li className="my-2 border-t border-primary-foreground/20"></li>
             {!isAuthenticated ? (
@@ -138,7 +174,7 @@ const Navbar = () => {
                     className="block text-primary-foreground hover:text-primary hover:bg-primary-foreground px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Login
+                    {t.navbar.login}
                   </Link>
                 </li>
                 <li>
@@ -147,7 +183,7 @@ const Navbar = () => {
                     className="block text-primary bg-primary-foreground px-4 py-2 mt-1 rounded-lg text-sm font-bold transition-colors shadow-sm"
                     onClick={() => setMobileOpen(false)}
                   >
-                    Sign Up
+                    {t.navbar.signUp}
                   </Link>
                 </li>
               </>
@@ -160,7 +196,7 @@ const Navbar = () => {
                     onClick={() => setMobileOpen(false)}
                   >
                     <UserIcon className="w-4 h-4 mr-2" />
-                    Profile
+                    {t.navbar.profile}
                   </Link>
                 </li>
                 <li>
@@ -169,7 +205,7 @@ const Navbar = () => {
                     className="w-full flex items-center gap-2 text-primary-foreground hover:bg-primary-foreground/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
                     <Bell className="w-4 h-4" />
-                    Notifications
+                    {t.navbar.notifications}
                     {unreadCount > 0 && (
                       <span className="ml-auto bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
                         {unreadCount}
@@ -182,7 +218,7 @@ const Navbar = () => {
                     onClick={handleLogout}
                     className="w-full text-left text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                   >
-                    Logout
+                    {t.navbar.logout}
                   </button>
                 </li>
                </>

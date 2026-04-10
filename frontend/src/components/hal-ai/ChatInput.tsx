@@ -4,12 +4,15 @@ import { useChatStore } from "../../store/useChatStore";
 import { toast } from "sonner";
 import { getBaseUrl } from "../../services/apiService";
 
+import { useTranslation } from "@/hooks/useTranslation";
+
 export const ChatInput = () => {
   const [text, setText] = useState("");
   const [isSpeakerOn, setIsSpeakerOn] = useState(true);
   const [isListening, setIsListening] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const { addMessage, isVoiceMode, setVoiceMode, setIsTyping, isTyping } = useChatStore();
+  const { t } = useTranslation();
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -200,7 +203,7 @@ export const ChatInput = () => {
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSend()}
         disabled={isTyping}
-        placeholder={isListening ? "Listening..." : isTyping ? "HAL AI is thinking..." : "Ask HAL AI..."}
+        placeholder={isListening ? t.chatbot.listening : isTyping ? t.chatbot.typing : t.chatbot.placeholder}
         className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#A5D6A7] focus:border-transparent disabled:opacity-70"
       />
 

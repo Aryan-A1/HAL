@@ -1,9 +1,10 @@
 import { X, Maximize2, Minimize2, Bot } from "lucide-react";
 import { useChatStore } from "../../store/useChatStore";
-import { LanguageSelector } from "./LanguageSelector";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export const ChatHeader = () => {
   const { setIsOpen, isExpanded, setIsExpanded } = useChatStore();
+  const { t } = useTranslation();
 
   return (
     <div className="bg-[#1B5E20] p-4 flex items-center justify-between rounded-t-xl shrink-0">
@@ -12,12 +13,11 @@ export const ChatHeader = () => {
           <Bot className="w-5 h-5 text-[#1B5E20]" />
         </div>
         <div>
-          <h3 className="text-[#FAFAFA] font-semibold text-lg leading-tight">HAL AI Assistant</h3>
+          <h3 className="text-[#FAFAFA] font-semibold text-lg leading-tight">{t.chatbot.title}</h3>
           <p className="text-[#A5D6A7] text-xs">Smart Farm Assistant</p>
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <LanguageSelector />
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="text-[#FAFAFA] hover:text-[#A5D6A7] transition-colors"

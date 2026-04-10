@@ -6,6 +6,7 @@ import DragDropUpload from "@/components/crop-disease/DragDropUpload";
 import AnalyzeSection from "@/components/crop-disease/AnalyzeSection";
 import ReportSection from "@/components/crop-disease/ReportSection";
 import HistorySection from "@/components/crop-disease/HistorySection";
+import { NearbyStores } from "@/components/crop-disease/NearbyStores";
 import type { AnalysisResult, HistoryEntry } from "@/types/crop-disease";
 import { diseaseApi } from "@/services/diseaseApi";
 import { apiService } from "@/services/apiService";
@@ -215,7 +216,10 @@ const CropDiseasePage = () => {
       {/* Report */}
       <AnimatePresence>
         {result && (
-          <ReportSection result={result} imageSrc={preview!} />
+          <>
+            <ReportSection result={result} imageSrc={preview!} />
+            <NearbyStores />
+          </>
         )}
       </AnimatePresence>
 

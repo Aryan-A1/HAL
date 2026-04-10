@@ -1,0 +1,45 @@
+{
+  "navbar": {
+    "home": "होम",
+    "schemes": "सरकारी योजनाएं",
+    "cropDisease": "फसल रोग",
+    "cropIrrigation": "फसल सिंचाई",
+    "catchUp": "फसल अपडेट",
+    "login": "लॉग इन",
+    "signUp": "साइन अप",
+    "profile": "प्रोफ़ाइल",
+    "logout": "लॉग आउट",
+    "notifications": "सूचनाएं"
+  },
+  "chatbot": {
+    "title": "किसान एआई सहायक",
+    "placeholder": "खेती के बारे में कुछ भी पूछें...",
+    "send": "भेजें",
+    "listening": "सुन रहा हूँ...",
+    "typing": "किसान एआई लिख रहा है..."
+  },
+  "schemes": {
+    "title": "सरकारी योजनाएं",
+    "subtitle": "अपने राज्य के लिए कृषि योजनाएं खोजें।",
+    "searchPlaceholder": "योजनाएं खोजें...",
+    "filterByCrop": "फसल का प्रकार",
+    "filterByState": "राज्य / क्षेत्र",
+    "getSchemes": "योजनाएं प्राप्त करें",
+    "searching": "खोज रहा है...",
+    "noSchemes": "कोई योजना नहीं मिली",
+    "noSchemesDesc": "विभिन्न कीवर्ड के साथ खोजने का प्रयास करें।"
+  },
+  "irrigation": {
+    "title": "फसल सिंचाई",
+    "subtitle": "वास्तविक समय के मौसम और HAL AI द्वारा निर्देशित सटीक सिंचाई।",
+    "stationActive": "स्टेशन सक्रिय",
+    "locating": "खोज रहा है..."
+  },
+  "notifications": {
+    "title": "सूचनाएं",
+    "markAllRead": "सभी को पढ़ा हुआ मानें",
+    "noUnread": "कोई अपठित सूचना नहीं",
+    "noNotifications": "अभी कोई सूचना नहीं",
+    "viewAll": "सभी सूचनाएं देखें"
+  }
+}
