@@ -61,16 +61,14 @@ def _is_agriculture_related(text: str) -> bool:
     return any(keyword in text_lower for keyword in agri_keywords)
 
 
+import re
+
 def _get_answer_groq(client: Groq, question: str) -> str:
     # First pass: Domain check using keywords (lenient to allow common greetings)
-    # Greetings like "hi", "hello" should still be answered by system prompt logic
     common_greetings = {"hi", "hello", "namaste", "hey", "help"}
     text_lower = question.lower().strip()
     
     if not _is_agriculture_related(question) and text_lower not in common_greetings:
-        # We still send to LLM but the system prompt will handle it, 
-        # or we can return early for obviously out-of-scope stuff.
-        # Let's let the LLM handle nuanced questions but use a strict system prompt.
         pass
 
     system_prompt = (
@@ -78,11 +76,11 @@ def _get_answer_groq(client: Groq, question: str) -> str:
         "You ONLY answer questions related to agriculture, crops, irrigation, plant diseases, "
         "soil health, government farming schemes, and general farming practices. "
         "\n\n"
-        "If the user asks anything outside this domain (e.g., history, math, code, entertainment, "
-        "general advice), politely respond: 'I can only help with agriculture-related queries.' "
+        "If the user asks anything outside this domain, politely respond: 'I can only help with agriculture-related queries.' "
         "\n\n"
-        "Keep responses simple, concise, and use farmer-friendly language without technical jargon. "
-        "Use a friendly yet professional tone. Answer in the same language as the user (English, Hindi, or Hinglish)."
+        "STRICT LANGUAGE RULE: You MUST answer strictly in the EXACT same language the user uses. "
+        "If the user asks in English, reply ONLY in English. If the user asks in Hindi, reply ONLY in Hindi. "
+        "Keep responses simple, concise, and professional without technical jargon."
     )
 
     response = client.chat.completions.create(
@@ -91,7 +89,7 @@ def _get_answer_groq(client: Groq, question: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question},
         ],
-        temperature=0.3, # Lower temperature for more focused responses
+        temperature=0.2, # Lower temperature for even stricter prompt adherence
     )
     return response.choices[0].message.content
 
@@ -103,7 +101,14 @@ def _mock_answer(question: str) -> str:
 
 
 def _text_to_audio(text: str, filename: str) -> str:
-    tts = gTTS(text)
+    # Detect Devanagari characters to switch gTTS language to Hindi
+    is_hindi = bool(re.search(r'[\u0900-\u097F]', text))
+    
+    lang = 'hi' if is_hindi else 'en'
+    # For English, use Indian accent (co.in) to sound more natural for indian context
+    tld = 'com' if is_hindi else 'co.in'
+    
+    tts = gTTS(text, lang=lang, tld=tld)
     audio_path = os.path.join(STATIC_AUDIO_DIR, f"{filename}.mp3")
     tts.save(audio_path)
     return audio_path
