@@ -83,6 +83,9 @@ graph LR
     API --> Storage[Local File System]
 ```
 
+
+![alt text]([path-or-url](https://drive.google.com/file/d/15b-vhSLZIWlJW-JzGfjz7lt_SSIhtyGL/view?usp=sharing))
+
 ### Data Flow
 1. **User Interaction**: Farmers interact with the dashboard or upload crop data via the React frontend.
 2. **REST Layer**: All requests are handled by FastAPI routers (auth, crop, weather, etc.).
