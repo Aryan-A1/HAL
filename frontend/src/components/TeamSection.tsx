@@ -3,29 +3,29 @@ import { Linkedin, Mail, Instagram } from "lucide-react";
 
 const team = [
   { 
-    name: "Aryan Kumar Singh",
-    linkedin: "https://www.linkedin.com/in/aryan-kumar-singh-784289314/",
-    instagram: "https://www.instagram.com/aryan_variant/",
-    email: "aryankumarsingh9370@gmail.com"
+    name: "Kritant Rana",
+    // linkedin: "https://www.linkedin.com/in/aryan-kumar-singh-784289314/",
+    // instagram: "https://www.instagram.com/aryan_variant/",
+    // email: "aryankumarsingh9370@gmail.com"
   },
   { 
-    name: "Sejal Jaswal",
-    linkedin: "https://www.linkedin.com/in/sejaljaswal/",
-    instagram: "https://www.instagram.com/sejal__jaswal/",
-    email: "sejaljaswal2020@gmail.com"
+    name: "Lakshay Dhir",
+    // linkedin: "https://www.linkedin.com/in/sejaljaswal/",
+    // instagram: "https://www.instagram.com/sejal__jaswal/",
+    // email: "sejaljaswal2020@gmail.com"
   },
   { 
-    name: "Harsh Thakur",
-    linkedin: "https://www.linkedin.com/in/harsh-thakur-21080a32a/",
-    instagram: "https://www.instagram.com/absolutelyitsharsh/",
-    email: "tsayamonly@gmail.com"
+    name: "Manish Kumar",
+    // linkedin: "https://www.linkedin.com/in/harsh-thakur-21080a32a/",
+    // instagram: "https://www.instagram.com/absolutelyitsharsh/",
+    // email: "tsayamonly@gmail.com"
   },
-  { 
-    name: "Krishan Goyal",
-    linkedin: "https://www.linkedin.com/in/krishangoyal717/",
-    instagram: "https://www.instagram.com/krishangoyal_23/",
-    email: "krishangoyal717@gmaill.com"
-  },
+  // { 
+  //   name: "Krishan Goyal",
+  //   linkedin: "https://www.linkedin.com/in/krishangoyal717/",
+  //   instagram: "https://www.instagram.com/krishangoyal_23/",
+  //   email: "krishangoyal717@gmaill.com"
+  // },
 ];
 
 const container = {
